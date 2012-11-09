@@ -51,19 +51,24 @@ class ThemeAssistant extends \Backend
 						);
 					}
 
-					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields'][$key] = array(
+					$field = array(
 						'label'         => $label,
 						'inputType'     => 'text',
 						'load_callback' => array(array('MadeYourDay\\Contao\\ThemeAssistant', 'fieldLoadCallback')),
 						'value'         => trim($var['value'], '#'),
-						'eval'          => array(
+					);
+
+					if ($var['type'] === 'color') {
+						$field['eval'] = array(
 							'maxlength'      => 6,
 							'isHexColor'     => true,
 							'decodeEntities' => true,
 							'tl_class'       => 'wizard',
-						),
-						'wizard'        => array(array('MadeYourDay\\Contao\\ThemeAssistant', 'wizardCallback')),
-					);
+						);
+						$field['wizard'] = array(array('MadeYourDay\\Contao\\ThemeAssistant', 'colorWizardCallback'));
+					}
+
+					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields'][$key] = $field;
 
 				}
 
@@ -143,7 +148,7 @@ class ThemeAssistant extends \Backend
 			</div>' . "\n" . $codeEditor;
 	}
 
-	public function wizardCallback(\DataContainer $dc)
+	public function colorWizardCallback(\DataContainer $dc)
 	{
 		return ' '.$this->generateImage('pickcolor.gif', $GLOBALS['TL_LANG']['MSC']['colorpicker'], 'style="vertical-align:top;cursor:pointer" title="' . specialchars($GLOBALS['TL_LANG']['MSC']['colorpicker']) . '" id="moo_' . $dc->field . '"') . '
 			<script>
