@@ -1,2 +1,1 @@
-contao-rocksolid-theme-assistant
-================================
+# RockSolid-Theme-Assistant Contao Extension
