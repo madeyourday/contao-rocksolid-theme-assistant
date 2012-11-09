@@ -114,8 +114,6 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 			return '<p class="tl_empty">' . $GLOBALS['TL_LANG']['MSC']['noResult'] . '</p>';
 		}
 
-		$eoCount = -1;
-
 		$return .= '<div id="tl_buttons">' . $this->generateGlobalButtons() . '</div>' . \Message::generate(true);
 		$return .= '<div class="tl_listing_container list_view">';
 		$return .= '<table class="tl_listing' . ($GLOBALS['TL_DCA'][$this->strTable]['list']['label']['showColumns'] ? ' showColumns' : '') . '">';
@@ -131,6 +129,8 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 				$return .= '<img src="'.$theme['screenshot'].'" alt="" class="theme_preview"> ';
 			}
 			$return .= $theme['name'].'</td></tr>';
+
+			$eoCount = -1;
 
 			foreach ($theme['files'] as $file) {
 				$return .= '<tr class="'.((++$eoCount % 2 == 0) ? 'even' : 'odd').'" onmouseover="Theme.hoverRow(this,1)" onmouseout="Theme.hoverRow(this,0)">';
