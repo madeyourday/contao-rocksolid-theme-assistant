@@ -136,9 +136,10 @@ class ThemeAssistant extends \Backend
 
 		return '
 			<div class="tl_tbox">
-				<h3><label for="ctrl_source">' . $GLOBALS['TL_LANG']['tl_files']['editor'][0] . '</label></h3>
-				<textarea name="source" id="ctrl_source" class="tl_textarea monospace" rows="12" cols="80" style="height:500px" onfocus="Backend.getScrollOffset()">' . "\n" . htmlspecialchars($dc->value) . '</textarea>' . (($GLOBALS['TL_CONFIG']['showHelp'] && strlen($GLOBALS['TL_LANG']['tl_files']['editor'][1])) ? '
-				<p class="tl_help tl_tip">' . $GLOBALS['TL_LANG']['tl_files']['editor'][1].'</p>' : '') . '
+				<p class="tl_info">' . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['editor_info'] . '</p>
+				<h3><label for="ctrl_source">' . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['source'][0] . '</label></h3>
+				<textarea name="source" id="ctrl_source" class="tl_textarea monospace" rows="12" cols="80" style="height:500px" onfocus="Backend.getScrollOffset()">' . "\n" . htmlspecialchars($dc->value) . '</textarea>
+				'. (($GLOBALS['TL_CONFIG']['showHelp']) ? '<p class="tl_help tl_tip">' . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['source'][1] . '</p>' : '') . '
 			</div>' . "\n" . $codeEditor;
 	}
 
