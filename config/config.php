@@ -16,3 +16,5 @@ $GLOBALS['BE_MOD']['design']['rocksolid_theme_assistant'] = array(
 	'tables' => array('rocksolid_theme_assistant'),
 	'icon'   => 'system/modules/rocksolid-theme-assistant/assets/images/icon.png',
 );
+
+$GLOBALS['BE_FFL']['mydMultiListWizard'] = 'MadeYourDay\\Contao\\Widget\\MultiListWizard';

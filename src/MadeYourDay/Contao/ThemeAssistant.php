@@ -23,8 +23,18 @@ class ThemeAssistant extends \Backend
 
 			if (substr($dc->id, -5) === '.base') {
 
+				$type = 'html';
+				if (substr($dc->id, -9, 4) === '.css') {
+					$type = 'css';
+				}
+
 				$template = explode("\n", file_get_contents(TL_ROOT . '/' . $dc->id), 2);
-				$data = json_decode(substr($template[0], 2, -2), true);
+				if ($type === 'css') {
+					$data = json_decode(substr($template[0], 2, -2), true);
+				}
+				else {
+					$data = json_decode(substr($template[0], 4, -3), true);
+				}
 				$template = $template[1];
 
 				if($data['fileHash'] !== md5_file(TL_ROOT . '/' . substr($dc->id, 0, -5))){
@@ -55,10 +65,11 @@ class ThemeAssistant extends \Backend
 						'label'         => $label,
 						'inputType'     => 'text',
 						'load_callback' => array(array('MadeYourDay\\Contao\\ThemeAssistant', 'fieldLoadCallback')),
-						'value'         => trim($var['value'], '#'),
+						'value'         => $var['value'],
 					);
 
 					if ($var['type'] === 'color') {
+						$field['value'] = trim($field['value'], '#');
 						$field['eval'] = array(
 							'maxlength'      => 6,
 							'isHexColor'     => true,
@@ -66,6 +77,34 @@ class ThemeAssistant extends \Backend
 							'tl_class'       => 'wizard',
 						);
 						$field['wizard'] = array(array('MadeYourDay\\Contao\\ThemeAssistant', 'colorWizardCallback'));
+					}
+					elseif ($var['type'] === 'boolean') {
+						$field['inputType'] = 'checkbox';
+					}
+					elseif ($var['type'] === 'image') {
+						$field['value'] = \FilesModel::findByPath($GLOBALS['TL_CONFIG']['uploadPath'] . '/' . $field['value'])->id;
+						$field['inputType'] = 'fileTree';
+						$field['eval'] = array(
+							'multiple' => false,
+							'filesOnly' => true,
+							'extensions' => 'jpg,jpeg,png,gif,svg',
+						);
+					}
+					elseif ($var['type'] === 'set') {
+						$field['inputType'] = 'mydMultiListWizard';
+						$field['eval'] = array(
+							'fields' => array(),
+						);
+						foreach ($var['fields'] as $fieldKey => $fieldSettings) {
+							$field['eval']['fields'][] = array(
+								'name' => $fieldKey,
+								'label' => $fieldSettings[
+									isset($fieldSettings[substr($GLOBALS['TL_LANGUAGE'], 0, 2)])
+									? substr($GLOBALS['TL_LANGUAGE'], 0, 2)
+									: 'en'
+								]['label'],
+							);
+						}
 					}
 
 					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields'][$key] = $field;
@@ -112,7 +151,7 @@ class ThemeAssistant extends \Backend
 	{
 		return '<p class="tl_gerror"><strong>'
 		     . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['hash_warning'][0] . ':</strong> '
-		     . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['hash_warning'][1] . '</p>';
+		     . sprintf($GLOBALS['TL_LANG']['rocksolid_theme_assistant']['hash_warning'][1], substr($a->id, 0, -5)) . '</p>';
 	}
 
 	public function fieldCallbackSource(\DataContainer $dc)
@@ -122,7 +161,11 @@ class ThemeAssistant extends \Backend
 		// Prepare the code editor
 		if ($GLOBALS['TL_CONFIG']['useCE']) {
 
-			$type = 'css';
+			$type = 'htmlmixed';
+
+			if ($dc->id && substr($dc->id, -9, 4) === '.css') {
+				$type = 'css';
+			}
 
 			$this->ceFields = array(array(
 				'id'   => 'ctrl_source',
@@ -170,29 +213,82 @@ class ThemeAssistant extends \Backend
 
 		if ($dc->id && substr($dc->id, -5) === '.base') {
 
+			$type = 'html';
+			if (substr($dc->id, -9, 4) === '.css') {
+				$type = 'css';
+			}
+
 			$template = explode("\n", file_get_contents(TL_ROOT . '/' . $dc->id), 2);
-			$data = json_decode(substr($template[0], 2, -2), true);
+			if ($type === 'css') {
+				$data = json_decode(substr($template[0], 2, -2), true);
+			}
+			else {
+				$data = json_decode(substr($template[0], 4, -3), true);
+			}
 			$template = $template[1];
 
 			foreach ($data['templateVars'] as $key => $var) {
-				$postValue = $this->Input->post($key);
-				if (strlen($postValue) === 6) {
-					$data['templateVars'][$key]['value'] = '#' . strtolower($postValue);
+
+				if(!isset($_POST[$key])){
+					continue;
 				}
+
+				$value = $_POST[$key];
+
+				if ($data['templateVars'][$key]['type'] === 'color') {
+					if (strlen($value) === 6) {
+						$value = '#' . strtolower($value);
+					}
+					else {
+						$value = $data['templateVars'][$key]['value'];
+					}
+				}
+				elseif ($data['templateVars'][$key]['type'] === 'boolean') {
+					$value = (bool)$value;
+				}
+				elseif ($data['templateVars'][$key]['type'] === 'image') {
+					$value = substr(\FilesModel::findByPk($value)->path, strlen($GLOBALS['TL_CONFIG']['uploadPath'])+1);
+				}
+				elseif ($data['templateVars'][$key]['type'] === 'set') {
+
+					if(count($value) === 1){
+						$emptyValues = true;
+						foreach ($value[0] as $setValue) {
+							if($setValue){
+								$emptyValues = false;
+								break;
+							}
+						}
+						if($emptyValues){
+							$value = array();
+						}
+					}
+				}
+
+				$data['templateVars'][$key]['value'] = $value;
+
 			}
 
 			// Accessing raw post data
 			if(!empty($_POST['source'])){
 				$template = $_POST['source'];
 			}
-			file_put_contents(TL_ROOT . '/' . substr($dc->id, 0, -5), $this->renderTemplate($template, $data));
+			file_put_contents(TL_ROOT . '/' . substr($dc->id, 0, -5), $this->renderTemplate($template, $data, $type));
 			$data['fileHash'] = md5_file(TL_ROOT . '/' . substr($dc->id, 0, -5));
-			file_put_contents(TL_ROOT . '/' . $dc->id, "/*".json_encode($data) . "*/\n" . $template);
+			if($type === 'css'){
+				$template = "/*".json_encode($data) . "*/\n" . $template;
+			}
+			else{
+				$template = "<!--".json_encode($data) . "-->\n" . $template;
+			}
+			file_put_contents(TL_ROOT . '/' . $dc->id, $template);
 
-			$file = new \File($dc->id);
-			$fileRecord = \FilesModel::findByPath($dc->id);
-			$fileRecord->hash = $file->hash;
-			$fileRecord->save();
+			if(substr($dc->id, 0, strlen($GLOBALS['TL_CONFIG']['uploadPath'])) === $GLOBALS['TL_CONFIG']['uploadPath']){
+				$file = new \File($dc->id);
+				$fileRecord = \FilesModel::findByPath($dc->id);
+				$fileRecord->hash = $file->hash;
+				$fileRecord->save();
+			}
 
 		}
 		else {
@@ -217,7 +313,47 @@ class ThemeAssistant extends \Backend
 		return $row['name'];
 	}
 
-	protected function renderTemplate($template, $data)
+	protected function renderTemplate($template, $data, $type)
+	{
+		if ($type === 'css') {
+			return $this->renderCssTemplate($template, $data);
+		}
+		else {
+			return $this->renderHtmlTemplate($template, $data);
+		}
+	}
+
+	protected function renderHtmlTemplate($template, $data)
+	{
+		$values = array();
+		foreach ($data['templateVars'] as $key => $var) {
+			$values[$key] = $var['value'];
+		}
+
+		$replace = array(
+			'(<\\?php)i' => '<rst?php',
+			'([ \\t]*<!--\\:(.*?)-->)i' => '<?php $1 ?>',
+			'(\\{\\:\\=(.*?)\\})i' => '<?php echo $1 ?>',
+			'(\\{\\:(.*?)\\})i' => '<?php $1 ?>',
+		);
+
+		$template = preg_replace(array_keys($replace), array_values($replace), $template);
+		$template = $this->parsePhpCode($template, $values);
+		$template = str_replace('<rst?php', '<?php', $template);
+
+		return $template;
+	}
+
+	protected function parsePhpCode($_phpCode, $data)
+	{
+		extract($data);
+		ob_start();
+		eval('?>' . $_phpCode . '<?php ');
+
+		return ob_get_clean();
+	}
+
+	protected function renderCssTemplate($template, $data)
 	{
 		$replaceFrom = array();
 		$replaceTo = array();

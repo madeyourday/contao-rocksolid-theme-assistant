@@ -71,7 +71,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 			$files = array();
 			$folders = \FilesModel::findMultipleByIds(unserialize($row['folders']));
 
-			if($folders === null){
+			if ($folders === null) {
 				continue;
 			}
 
@@ -88,8 +88,25 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 					$extension = $extension[count($extension)-2];
 					$files[] = array(
 						'id'   => $file,
-						'type' => $extension,
+						'type' => $extension === 'html5' ? 'html' : $extension,
 						'name' => substr($file, strlen($folder)+1, -5),
+					);
+				}
+			}
+
+			$templateFiles = scandir(TL_ROOT . '/' . $row['templates']);
+
+			foreach ($templateFiles as $file) {
+				if (
+					substr($file, -5) === '.base' &&
+					file_exists(TL_ROOT . '/' . $row['templates'] . '/' . substr($file, 0, -5))
+				) {
+					$extension = explode('.', $file);
+					$extension = $extension[count($extension)-2];
+					$files[] = array(
+						'id'   => $row['templates'] . '/' . $file,
+						'type' => $extension === 'html5' ? 'html' : $extension,
+						'name' => substr($file, 0, -5),
 					);
 				}
 			}

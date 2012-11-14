@@ -13,11 +13,11 @@
  */
 
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['file_types']['css']   = 'Stylesheet';
-$GLOBALS['TL_LANG']['rocksolid_theme_assistant']['file_types']['html5'] = 'Template';
+$GLOBALS['TL_LANG']['rocksolid_theme_assistant']['file_types']['html']  = 'Template';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['edit'][0]             = 'Datei bearbeiten';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['edit'][1]             = 'Datei "%s" bearbeiten';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['hash_warning'][0]     = 'Vorsicht';
-$GLOBALS['TL_LANG']['rocksolid_theme_assistant']['hash_warning'][1]     = 'Die Datei wurde außerhalb des Assistenten bearbeitet, beim Speichern gehen die Änderungen verloren!';
+$GLOBALS['TL_LANG']['rocksolid_theme_assistant']['hash_warning'][1]     = 'Die Datei <i>/%s</i> wurde außerhalb des Assistenten bearbeitet, beim Speichern gehen die Änderungen verloren!';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['legend_source']       = 'Quelltext bearbeiten';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['editor_info']         = 'Falls der Editor nicht korrekt angezeigt wird, laden Sie bitte die Seite neu.';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['source'][0]           = 'Quelltext';
