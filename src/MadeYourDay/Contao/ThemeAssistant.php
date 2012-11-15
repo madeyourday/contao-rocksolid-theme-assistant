@@ -117,7 +117,11 @@ class ThemeAssistant extends \Backend
 						$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['palettes']['default'] .= ';';
 					}
 					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['palettes']['default'] .= '{group_legend_' . $key . ':hide}';
-					$GLOBALS['TL_LANG']['rocksolid_theme_assistant']['group_legend_'.$key] = $group['de']['label'];
+					$GLOBALS['TL_LANG']['rocksolid_theme_assistant']['group_legend_'.$key] = $group[
+						isset($group[substr($GLOBALS['TL_LANGUAGE'], 0, 2)])
+						? substr($GLOBALS['TL_LANGUAGE'], 0, 2)
+						: 'en'
+					]['label'];
 					foreach ($data['templateVars'] as $varKey => $var) {
 						if ($var['group'] === $key) {
 							$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['palettes']['default'] .= ',' . $varKey;
