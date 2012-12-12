@@ -37,12 +37,33 @@ class ThemeAssistant extends \Backend
 				}
 				$template = $template[1];
 
-				if($data['fileHash'] !== md5_file(TL_ROOT . '/' . substr($dc->id, 0, -5))){
+				if ($data['fileHash'] !== md5_file(TL_ROOT . '/' . substr($dc->id, 0, -5))) {
 					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields']['file_hash_warning'] = array(
 						'label' => array('', ''),
 						'input_field_callback' => array('MadeYourDay\\Contao\\ThemeAssistant', 'fieldFileHashCallback'),
 					);
 					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['palettes']['default'] .= 'file_hash_warning;';
+				}
+
+				if (!empty($data['variations']) && (
+					!empty($data['variations'][substr($GLOBALS['TL_LANGUAGE'], 0, 2)]) ||
+					!empty($data['variations']['en'])
+				)) {
+					$variations = !empty($data['variations'][substr($GLOBALS['TL_LANGUAGE'], 0, 2)]) ? $data['variations'][substr($GLOBALS['TL_LANGUAGE'], 0, 2)] : $data['variations']['en'];
+					$options = array('variation0' => $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['variation_default']);
+					foreach ($variations as $key => $variation) {
+						$options['variation' . ($key + 1)] = $variation;
+					}
+					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields']['variations'] = array(
+						'label' => &$GLOBALS['TL_LANG']['rocksolid_theme_assistant']['variations'],
+						'inputType' => 'select',
+						'options' => $options,
+						'eval' => array('includeBlankOption' => true),
+						'wizard' => array(
+							array('MadeYourDay\\Contao\\ThemeAssistant', 'fieldVariationsWizard'),
+						),
+					);
+					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['palettes']['default'] .= '{legend_variations:hide},variations;';
 				}
 
 				foreach ($data['templateVars'] as $key => $var) {
@@ -151,11 +172,25 @@ class ThemeAssistant extends \Backend
 		return $GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields'][$dc->field]['value'];
 	}
 
-	public function fieldFileHashCallback($a, $b)
+	public function fieldFileHashCallback(\DataContainer $dc)
 	{
 		return '<p class="tl_gerror"><strong>'
 		     . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['hash_warning'][0] . ':</strong> '
-		     . sprintf($GLOBALS['TL_LANG']['rocksolid_theme_assistant']['hash_warning'][1], substr($a->id, 0, -5)) . '</p>';
+		     . sprintf($GLOBALS['TL_LANG']['rocksolid_theme_assistant']['hash_warning'][1], substr($dc->id, 0, -5)) . '</p>';
+	}
+
+	public function fieldVariationsWizard(\DataContainer $dc)
+	{
+		return '<script>'
+		     . '	$("ctrl_' . $dc->field . '").addEvent("change", function(){'
+		     . '		if (window.confirm("' . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['variations_confirm'] . '")) {'
+		     . '			Backend.autoSubmit("' . $dc->table . '");'
+		     . '		}'
+		     . '		else {'
+		     . '			this.set("value", "");'
+		     . '		}'
+		     . '	});'
+		     . '</script>';
 	}
 
 	public function fieldCallbackSource(\DataContainer $dc)
@@ -231,45 +266,59 @@ class ThemeAssistant extends \Backend
 			}
 			$template = $template[1];
 
-			foreach ($data['templateVars'] as $key => $var) {
+			if (!empty($_POST['variations']) && substr($_POST['variations'], 0, 9) === 'variation') {
 
-				if(!isset($_POST[$key])){
-					continue;
-				}
-
-				$value = $_POST[$key];
-
-				if ($data['templateVars'][$key]['type'] === 'color') {
-					if (strlen($value) === 6) {
-						$value = '#' . strtolower($value);
-					}
-					else {
-						$value = $data['templateVars'][$key]['value'];
+				$variation = (int) substr($_POST['variations'], 9);
+				foreach ($data['templateVars'] as $key => $var) {
+					if (isset($data['templateVars'][$key]['defaultValues'][$variation])) {
+						$data['templateVars'][$key]['value'] = $data['templateVars'][$key]['defaultValues'][$variation];
 					}
 				}
-				elseif ($data['templateVars'][$key]['type'] === 'boolean') {
-					$value = (bool)$value;
-				}
-				elseif ($data['templateVars'][$key]['type'] === 'image') {
-					$value = substr(\FilesModel::findByPk($value)->path, strlen($GLOBALS['TL_CONFIG']['uploadPath'])+1);
-				}
-				elseif ($data['templateVars'][$key]['type'] === 'set') {
 
-					if(count($value) === 1){
-						$emptyValues = true;
-						foreach ($value[0] as $setValue) {
-							if($setValue){
-								$emptyValues = false;
-								break;
+			}
+			else {
+
+				foreach ($data['templateVars'] as $key => $var) {
+
+					if(!isset($_POST[$key])){
+						continue;
+					}
+
+					$value = $_POST[$key];
+
+					if ($data['templateVars'][$key]['type'] === 'color') {
+						if (strlen($value) === 6) {
+							$value = '#' . strtolower($value);
+						}
+						else {
+							$value = $data['templateVars'][$key]['value'];
+						}
+					}
+					elseif ($data['templateVars'][$key]['type'] === 'boolean') {
+						$value = (bool)$value;
+					}
+					elseif ($data['templateVars'][$key]['type'] === 'image') {
+						$value = substr(\FilesModel::findByPk($value)->path, strlen($GLOBALS['TL_CONFIG']['uploadPath'])+1);
+					}
+					elseif ($data['templateVars'][$key]['type'] === 'set') {
+
+						if(count($value) === 1){
+							$emptyValues = true;
+							foreach ($value[0] as $setValue) {
+								if($setValue){
+									$emptyValues = false;
+									break;
+								}
+							}
+							if($emptyValues){
+								$value = array();
 							}
 						}
-						if($emptyValues){
-							$value = array();
-						}
 					}
-				}
 
-				$data['templateVars'][$key]['value'] = $value;
+					$data['templateVars'][$key]['value'] = $value;
+
+				}
 
 			}
 
