@@ -392,9 +392,9 @@ class ThemeAssistant extends \Backend
 
 		$replace = array(
 			'(<\\?php)i' => '<rst?php',
-			'([ \\t]*<!--\\:(.*?)-->)i' => '<?php $1 ?>',
-			'(\\{\\:\\=(.*?)\\})i' => '<?php echo $1 ?>',
-			'(\\{\\:(.*?)\\})i' => '<?php $1 ?>',
+			'([ \\t]*<!--\\:(.*?)-->)is' => '<?php $1 ?>',
+			'(\\{\\:\\=(.*?)\\})is' => '<?php echo $1 ?>',
+			'(\\{\\:(.*?)\\})is' => '<?php $1 ?>',
 		);
 
 		$template = preg_replace(array_keys($replace), array_values($replace), $template);
