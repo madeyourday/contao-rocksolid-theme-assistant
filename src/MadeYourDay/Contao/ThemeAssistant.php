@@ -102,6 +102,13 @@ class ThemeAssistant extends \Backend
 					elseif ($var['type'] === 'boolean') {
 						$field['inputType'] = 'checkbox';
 					}
+					elseif ($var['type'] === 'select') {
+						$field['inputType'] = 'select';
+						$field['options'] = array();
+						foreach ($var['choices'] as $choiceKey => $choiceValue) {
+							$field['options'][$choiceKey] = isset($choiceValue[substr($GLOBALS['TL_LANGUAGE'], 0, 2)]) ? $choiceValue[substr($GLOBALS['TL_LANGUAGE'], 0, 2)] : $choiceValue['en'];
+						}
+					}
 					elseif ($var['type'] === 'image') {
 						$field['value'] = \FilesModel::findByPath($GLOBALS['TL_CONFIG']['uploadPath'] . '/' . $field['value'])->id;
 						$field['inputType'] = 'fileTree';
