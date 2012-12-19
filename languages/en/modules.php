@@ -13,4 +13,4 @@
  */
 
 $GLOBALS['TL_LANG']['MOD']['rocksolid_theme_assistant'][0] = 'RockSolid Theme Assistant';
-$GLOBALS['TL_LANG']['MOD']['rocksolid_theme_assistant'][1] = 'Edit stylesheets and templates with RockSolid Theme Assistant';
+$GLOBALS['TL_LANG']['MOD']['rocksolid_theme_assistant'][1] = 'Edit stylesheets and templates with the RockSolid Theme Assistant';
