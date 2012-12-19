@@ -476,6 +476,17 @@ class ThemeAssistant extends \Backend
 			return '#'.strtolower(sprintf("%02X", round($color[0])) . sprintf("%02X", round($color[1])) . sprintf("%02X", round($color[2])));
 
 		}
+		elseif ($function['function'] === 'invert') {
+
+			$color = substr($data['templateVars'][substr($function['params'][0], 1)]['value'], 1);
+
+			return strtolower('#'
+				.sprintf("%02X", 255 - (int)hexdec(substr($color, 0, 2))) // red
+				.sprintf("%02X", 255 - (int)hexdec(substr($color, 2, 2))) // green
+				.sprintf("%02X", 255 - (int)hexdec(substr($color, 4, 2))) // blue
+			);
+
+		}
 	}
 
 	protected function colorRgbToHsl($rgb)
