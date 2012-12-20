@@ -257,6 +257,16 @@ class ThemeAssistant extends \Backend
 	public function onsubmitCallback(\DataContainer $dc)
 	{
 
+		$rawPost = $_POST;
+		if (
+			(function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc()) ||
+			(ini_get('magic_quotes_sybase') && (strtolower(ini_get('magic_quotes_sybase')) !== 'off'))
+		) {
+			array_walk_recursive($rawPost, function(&$value, $key){
+				$value = stripslashes($value);
+			});
+		}
+
 		if ($dc->id && substr($dc->id, -5) === '.base') {
 
 			$type = 'html';
@@ -273,9 +283,9 @@ class ThemeAssistant extends \Backend
 			}
 			$template = $template[1];
 
-			if (!empty($_POST['variations']) && substr($_POST['variations'], 0, 9) === 'variation') {
+			if (!empty($rawPost['variations']) && substr($rawPost['variations'], 0, 9) === 'variation') {
 
-				$variation = (int) substr($_POST['variations'], 9);
+				$variation = (int) substr($rawPost['variations'], 9);
 				foreach ($data['templateVars'] as $key => $var) {
 					if (isset($data['templateVars'][$key]['defaultValues'][$variation])) {
 						$data['templateVars'][$key]['value'] = $data['templateVars'][$key]['defaultValues'][$variation];
@@ -287,11 +297,11 @@ class ThemeAssistant extends \Backend
 
 				foreach ($data['templateVars'] as $key => $var) {
 
-					if(!isset($_POST[$key])){
+					if(!isset($rawPost[$key])){
 						continue;
 					}
 
-					$value = $_POST[$key];
+					$value = $rawPost[$key];
 
 					if ($data['templateVars'][$key]['type'] === 'color') {
 						if (strlen($value) === 6) {
@@ -330,8 +340,8 @@ class ThemeAssistant extends \Backend
 			}
 
 			// Accessing raw post data
-			if(!empty($_POST['source'])){
-				$template = $_POST['source'];
+			if(!empty($rawPost['source'])){
+				$template = $rawPost['source'];
 			}
 			file_put_contents(TL_ROOT . '/' . substr($dc->id, 0, -5), $this->renderTemplate($template, $data, $type));
 			$data['fileHash'] = md5_file(TL_ROOT . '/' . substr($dc->id, 0, -5));
