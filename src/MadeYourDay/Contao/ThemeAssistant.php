@@ -45,6 +45,14 @@ class ThemeAssistant extends \Backend
 					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['palettes']['default'] .= 'file_hash_warning;';
 				}
 
+				if (!static::isWriteable(TL_ROOT . '/' . substr($dc->id, 0, -5)) || !static::isWriteable(TL_ROOT . '/' . $dc->id)) {
+					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields']['file_writable_warning'] = array(
+						'label' => array('', ''),
+						'input_field_callback' => array('MadeYourDay\\Contao\\ThemeAssistant', 'fieldFileWritableCallback'),
+					);
+					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['palettes']['default'] .= 'file_writable_warning;';
+				}
+
 				if (!empty($data['variations']) && (
 					!empty($data['variations'][substr($GLOBALS['TL_LANGUAGE'], 0, 2)]) ||
 					!empty($data['variations']['en'])
@@ -184,6 +192,13 @@ class ThemeAssistant extends \Backend
 		return '<p class="tl_gerror"><strong>'
 		     . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['hash_warning'][0] . ':</strong> '
 		     . sprintf($GLOBALS['TL_LANG']['rocksolid_theme_assistant']['hash_warning'][1], substr($dc->id, 0, -5)) . '</p>';
+	}
+
+	public function fieldFileWritableCallback(\DataContainer $dc)
+	{
+		return '<p class="tl_gerror"><strong>'
+		     . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['writable_warning'][0] . ':</strong> '
+		     . sprintf($GLOBALS['TL_LANG']['rocksolid_theme_assistant']['writable_warning'][1], substr($dc->id, 0, -5), $dc->id) . '</p>';
 	}
 
 	public function fieldVariationsWizard(\DataContainer $dc)
@@ -578,5 +593,28 @@ class ThemeAssistant extends \Backend
 		if((3 * $H) < 2) return ($v1 + ($v2 - $v1) * ((2 / 3) - $H) * 6);
 
 		return $v1;
+	}
+
+	protected static function isWriteable($path)
+	{
+		if ($path[strlen($path)-1] === '/') {
+			return static::isWriteable($path . uniqid(mt_rand()) . '.tmp');
+		}
+		else if (is_dir($path)) {
+			return static::isWriteable($path . '/' . uniqid(mt_rand()) . '.tmp');
+		}
+
+		$rm = file_exists($path);
+		$f = @fopen($path, 'a');
+		if ($f === false) {
+			return false;
+		}
+		fclose($f);
+
+		if (!$rm) {
+			unlink($path);
+		}
+
+		return true;
 	}
 }
