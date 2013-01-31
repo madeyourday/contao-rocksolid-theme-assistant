@@ -20,6 +20,7 @@ $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['hash_warning'][0]     = 'Vorsi
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['hash_warning'][1]     = 'Die Datei <i>/%s</i> wurde außerhalb des Assistenten bearbeitet, beim Speichern gehen die Änderungen daran verloren!';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['writable_warning'][0] = 'Vorsicht';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['writable_warning'][1] = 'Die Dateien <i>/%s</i> und <i>/%s</i> sind nicht beschreibbar! Bitte prüfen Sie die Dateiberechtigungen!';
+$GLOBALS['TL_LANG']['rocksolid_theme_assistant']['default_value']       = 'Standardwert';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['legend_variations']   = 'Vordefinierte Varianten';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['variations'][0]       = 'Vordefinierte Variante auswählen';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['variations'][1]       = 'Vorsicht: Alle Felder werden überschrieben!';

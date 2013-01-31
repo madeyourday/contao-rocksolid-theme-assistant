@@ -90,6 +90,21 @@ class ThemeAssistant extends \Backend
 						);
 					}
 
+					// add default values to field descriptions
+					$defaultValue = $var['defaultValues'][0];
+					if ($var['type'] === 'boolean') {
+						$defaultValue = '<input type="checkbox"' . ($defaultValue ? ' checked="checked"' : '') . ' disabled="disabled" />';
+					}
+					elseif ($var['type'] === 'set') {
+						$defaultValue = '<br>' . implode('<br>', array_map(function($values){
+							return implode(' &nbsp;|&nbsp; ', array_map('htmlspecialchars', $values));
+						}, $defaultValue));
+					}
+					if ($label[1]) {
+						$label[1] .= ', ';
+					}
+					$label[1] .= '<i>' . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['default_value'] . ': ' . $defaultValue . '</i>';
+
 					$field = array(
 						'label'         => $label,
 						'inputType'     => 'text',
@@ -124,6 +139,58 @@ class ThemeAssistant extends \Backend
 							'multiple' => false,
 							'filesOnly' => true,
 							'extensions' => 'jpg,jpeg,png,gif,svg',
+						);
+					}
+					elseif ($var['type'] === 'background-image') {
+						if (substr($field['value'], 0, 5) === 'url("' && substr($field['value'], -2) === '")') {
+							$field['value'] = \FilesModel::findByPath(static::resolveRelativePath(dirname($dc->id) . '/' . substr($field['value'], 5, -2)))->id;
+						}
+						else {
+							$field['value'] = '';
+						}
+						$field['inputType'] = 'fileTree';
+						$field['eval'] = array(
+							'multiple' => false,
+							'filesOnly' => true,
+							'extensions' => 'jpg,jpeg,png,gif,svg',
+						);
+					}
+					elseif ($var['type'] === 'length') {
+						$field['inputType'] = 'inputUnit';
+						$field['options'] = array(
+							'' => '-',
+							'px' => 'px',
+							'%' => '%',
+							'em' => 'em',
+							'rem' => 'rem',
+							'ex' => 'ex',
+							'pt' => 'pt',
+							'pc' => 'pc',
+							'in' => 'in',
+							'cm' => 'cm',
+							'mm' => 'mm',
+						);
+						if ($field['value']) {
+							preg_match('(^([.0-9]+)([^.0-9]*))i', $field['value'], $matches);
+							$field['value'] = array(
+								'value' => $matches[1],
+								'unit' => $matches[2],
+							);
+						}
+						else {
+							$field['value'] = array(
+								'value' => '',
+								'unit' => '',
+							);
+						}
+					}
+					elseif ($var['type'] === 'background-repeat') {
+						$field['inputType'] = 'select';
+						$field['options'] = array(
+							'no-repeat' => 'no-repeat',
+							'repeat' => 'repeat',
+							'repeat-x' => 'repeat-x',
+							'repeat-y' => 'repeat-y',
 						);
 					}
 					elseif ($var['type'] === 'set') {
@@ -332,8 +399,23 @@ class ThemeAssistant extends \Backend
 					elseif ($data['templateVars'][$key]['type'] === 'image') {
 						$value = substr(\FilesModel::findByPk($value)->path, strlen($GLOBALS['TL_CONFIG']['uploadPath'])+1);
 					}
+					elseif ($data['templateVars'][$key]['type'] === 'background-image') {
+						if ($value && \FilesModel::findByPk($value)) {
+							$value = 'url("' . static::getRelativePath(dirname($dc->id), \FilesModel::findByPk($value)->path) . '")';
+						}
+						else {
+							$value = 'none';
+						}
+					}
+					elseif ($data['templateVars'][$key]['type'] === 'length') {
+						if ($value && isset($value['value']) && isset($value['unit'])) {
+							$value = $value['value'] . $value['unit'];
+						}
+						else {
+							$value = '';
+						}
+					}
 					elseif ($data['templateVars'][$key]['type'] === 'set') {
-
 						if(count($value) === 1){
 							$emptyValues = true;
 							foreach ($value[0] as $setValue) {
@@ -512,6 +594,18 @@ class ThemeAssistant extends \Backend
 			);
 
 		}
+		elseif ($function['function'] === 'col') {
+
+			if (substr($function['params'][0], 0, 1) === '$') {
+				$function['params'][0] = $data['templateVars'][substr($function['params'][0], 1)]['value'];
+			}
+			if (substr($function['params'][1], 0, 1) === '$') {
+				$function['params'][1] = $data['templateVars'][substr($function['params'][1], 1)]['value'];
+			}
+
+			return trim(trim(number_format($function['params'][0]/$function['params'][1]*100, 3, '.', ''), '0'), '.') . '%';
+
+		}
 	}
 
 	protected function colorRgbToHsl($rgb)
@@ -616,5 +710,73 @@ class ThemeAssistant extends \Backend
 		}
 
 		return true;
+	}
+
+	protected static function getRelativePath($path1, $path2)
+	{
+		//Remove starting, ending, and double / in paths
+		$path1 = str_replace('\\', '/', trim($path1, '/'));
+		$path2 = str_replace('\\', '/', trim($path2, '/'));
+		while (substr_count($path1, '//')) {
+			$path1 = str_replace('//', '/', $path1);
+		}
+		while (substr_count($path2, '//')) {
+			$path2 = str_replace('//', '/', $path2);
+		}
+
+		//create arrays
+		$arr1 = explode('/', $path1);
+		if (!$path1) {
+			$arr1 = array();
+		}
+		$arr2 = explode('/', $path2);
+		if (!$path2) {
+			$arr2 = array();
+		}
+		$size1 = count($arr1);
+		$size2 = count($arr2);
+
+		//now the hard part :-p
+		$path = '';
+		for ($i = 0; $i < min($size1, $size2); $i ++) {
+			if ($arr1[$i] === $arr2[$i]) {
+				continue;
+			}
+			else {
+				$path = '../' . $path . $arr2[$i] . '/';
+			}
+		}
+		if ($size1 > $size2) {
+			for ($i = $size2; $i < $size1; $i ++) {
+				$path = '../' . $path;
+			}
+		}
+		elseif ($size2 > $size1) {
+			for ($i = $size1; $i < $size2; $i ++) {
+				$path .= $arr2[$i] . '/';
+			}
+		}
+
+		return trim($path, '/');
+	}
+
+	protected static function resolveRelativePath($path)
+	{
+		$path = str_replace('\\', '/', $path);
+		$parts = array_filter(explode('/', $path), 'strlen');
+		$absolutes = array();
+		foreach ($parts as $part) {
+			if ('.' === $part) {
+				continue;
+			}
+			if ('..' === $part) {
+				array_pop($absolutes);
+			}
+			else {
+				$absolutes[] = $part;
+			}
+		}
+
+		return implode('/', $absolutes);
 	}
 }
