@@ -535,7 +535,19 @@ class ThemeAssistant extends \Backend
 			$replaceTo[] = $this->executeColorFunction($colorFunction, $data);
 		}
 
-		return str_replace($replaceFrom, $replaceTo, $template);
+		$template = str_replace($replaceFrom, $replaceTo, $template);
+
+		$replace = array(
+			'(<\\?php)i' => '<rst?php',
+			'([ \\t]*/\\*\\:(.*?)\\*/)is' => '<?php $1 ?>',
+		);
+		$template = preg_replace(array_keys($replace), array_values($replace), $template);
+		$template = $this->parsePhpCode($template, array('tv' => array_map(function($var){
+			return $var['value'];
+		}, $data['templateVars'])));
+		$template = str_replace('<rst?php', '<?php', $template);
+
+		return $template;
 	}
 
 	protected function executeColorFunction($function, $data)
