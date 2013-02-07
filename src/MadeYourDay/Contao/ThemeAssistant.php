@@ -388,6 +388,9 @@ class ThemeAssistant extends \Backend
 					if (isset($data['templateVars'][$key]['defaultValues'][$variation])) {
 						$data['templateVars'][$key]['value'] = $data['templateVars'][$key]['defaultValues'][$variation];
 					}
+					elseif (isset($data['templateVars'][$key]['defaultValues'][0])) {
+						$data['templateVars'][$key]['value'] = $data['templateVars'][$key]['defaultValues'][0];
+					}
 				}
 
 			}
