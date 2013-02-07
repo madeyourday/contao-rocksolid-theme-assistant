@@ -193,6 +193,22 @@ class ThemeAssistant extends \Backend
 							'repeat-y' => 'repeat-y',
 						);
 					}
+					elseif ($var['type'] === 'background-attachment') {
+						$field['inputType'] = 'select';
+						$field['options'] = array(
+							'scroll' => 'scroll',
+							'fixed' => 'fixed',
+							'local' => 'local',
+						);
+					}
+					elseif ($var['type'] === 'background-size') {
+						$field['inputType'] = 'select';
+						$field['options'] = array(
+							'auto' => 'auto',
+							'cover' => 'cover',
+							'contain' => 'contain',
+						);
+					}
 					elseif ($var['type'] === 'set') {
 						$field['inputType'] = 'mydMultiListWizard';
 						$field['eval'] = array(
