@@ -571,21 +571,42 @@ class ThemeAssistant extends \Backend
 
 	protected function executeColorFunction($function, $data)
 	{
+		foreach ($function['params'] as $key => $param) {
+
+			$function['params'][$key] = preg_replace_callback('(\\$([a-z0-9_-]+))i', function($matches) use ($data){
+				if (isset($data['templateVars'][$matches[1]])) {
+					return $data['templateVars'][$matches[1]]['value'];
+				}
+				return $matches[0];
+			}, $function['params'][$key]);
+
+			$function['params'][$key] = preg_replace_callback('(([0-9.]+)\\s*([*/+-])\\s*([0-9.]+))i', function($matches){
+				if ($matches[2] === '*') {
+					return $matches[1] * $matches[3];
+				}
+				elseif ($matches[2] === '/') {
+					return $matches[1] / $matches[3];
+				}
+				elseif ($matches[2] === '+') {
+					return $matches[1] + $matches[3];
+				}
+				elseif ($matches[2] === '-') {
+					return $matches[1] - $matches[3];
+				}
+				return $matches[0];
+			}, $function['params'][$key]);
+
+		}
+
 		if ($function['function'] === 'rgba') {
 
-			$color = $data['templateVars'][substr($function['params'][0], 1)]['value'];
+			$color = $function['params'][0];
 
 			return 'rgba('.hexdec(substr($color, 1, 2)).', '.hexdec(substr($color, 3, 2)).', '.hexdec(substr($color, 5, 2)).', '.$function['params'][1].')';
 
 		}
 		elseif ($function['function'] === 'mix') {
 
-			if (substr($function['params'][0], 0, 1) === '$') {
-				$function['params'][0] = $data['templateVars'][substr($function['params'][0], 1)]['value'];
-			}
-			if (substr($function['params'][1], 0, 1) === '$') {
-				$function['params'][1] = $data['templateVars'][substr($function['params'][1], 1)]['value'];
-			}
 			$color1 = substr(trim($function['params'][0]), 1);
 			$color2 = substr(trim($function['params'][1]), 1);
 			$weight = substr(trim($function['params'][2]), 0, -1)/100;
@@ -599,7 +620,7 @@ class ThemeAssistant extends \Backend
 		}
 		elseif ($function['function'] === 'lighten' || $function['function'] === 'darken') {
 
-			$color = substr($data['templateVars'][substr($function['params'][0], 1)]['value'], 1);
+			$color = substr($function['params'][0], 1);
 			$weight = substr($function['params'][1], 0, -1)/100;
 			$color = static::colorRgbToHsl(array(hexdec(substr($color, 0, 2)), hexdec(substr($color, 2, 2)), hexdec(substr($color, 4, 2))));
 			$color[2] += $weight * ($function['function'] === 'lighten' ? 1 : -1);
@@ -616,7 +637,7 @@ class ThemeAssistant extends \Backend
 		}
 		elseif ($function['function'] === 'invert') {
 
-			$color = substr($data['templateVars'][substr($function['params'][0], 1)]['value'], 1);
+			$color = substr($function['params'][0], 1);
 
 			return strtolower('#'
 				.sprintf("%02X", 255 - (int)hexdec(substr($color, 0, 2))) // red
@@ -626,13 +647,6 @@ class ThemeAssistant extends \Backend
 
 		}
 		elseif ($function['function'] === 'col') {
-
-			if (substr($function['params'][0], 0, 1) === '$') {
-				$function['params'][0] = $data['templateVars'][substr($function['params'][0], 1)]['value'];
-			}
-			if (substr($function['params'][1], 0, 1) === '$') {
-				$function['params'][1] = $data['templateVars'][substr($function['params'][1], 1)]['value'];
-			}
 
 			return trim(trim(number_format($function['params'][0]/$function['params'][1]*100, 3, '.', ''), '0'), '.') . '%';
 
