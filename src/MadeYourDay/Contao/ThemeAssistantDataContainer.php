@@ -71,26 +71,24 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 			$files = array();
 			$folders = \FilesModel::findMultipleByIds(unserialize($row['folders']));
 
-			if ($folders === null) {
-				continue;
-			}
-
-			foreach ($folders->fetchEach('path') as $folder) {
-				$filesResult = \FilesModel::findBy(array($this->FilesModel->getTable().'.path LIKE ? AND extension = \'base\''), $folder.'/%');
-				if($filesResult === null){
-					continue;
-				}
-				foreach ($filesResult->fetchEach('path') as $file) {
-					if(!file_exists(TL_ROOT.'/'.substr($file, 0, -5))){
+			if ($folders !== null) {
+				foreach ($folders->fetchEach('path') as $folder) {
+					$filesResult = \FilesModel::findBy(array($this->FilesModel->getTable().'.path LIKE ? AND extension = \'base\''), $folder.'/%');
+					if($filesResult === null){
 						continue;
 					}
-					$extension = explode('.', $file);
-					$extension = $extension[count($extension)-2];
-					$files[] = array(
-						'id'   => $file,
-						'type' => $extension === 'html5' ? 'html' : $extension,
-						'name' => substr($file, strlen($folder)+1, -5),
-					);
+					foreach ($filesResult->fetchEach('path') as $file) {
+						if(!file_exists(TL_ROOT.'/'.substr($file, 0, -5))){
+							continue;
+						}
+						$extension = explode('.', $file);
+						$extension = $extension[count($extension)-2];
+						$files[] = array(
+							'id'   => $file,
+							'type' => $extension === 'html5' ? 'html' : $extension,
+							'name' => substr($file, strlen($folder)+1, -5),
+						);
+					}
 				}
 			}
 
