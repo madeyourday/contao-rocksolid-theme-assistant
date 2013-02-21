@@ -101,7 +101,10 @@ class ThemeAssistant extends \Backend
 						}, $defaultValue));
 					}
 					if ($label[1]) {
-						$label[1] .= ', ';
+						$label[1] .= '. ';
+					}
+					if ($defaultValue === '') {
+						$defaultValue = $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['default_value_empty'];
 					}
 					$label[1] .= '<i>' . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['default_value'] . ': ' . $defaultValue . '</i>';
 

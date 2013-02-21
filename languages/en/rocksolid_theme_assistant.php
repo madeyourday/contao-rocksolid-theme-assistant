@@ -21,6 +21,7 @@ $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['hash_warning'][1]     = 'The f
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['writable_warning'][0] = 'Warning';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['writable_warning'][1] = 'The files <i>/%s</i> and <i>/%s</i> are not writable! Please check the file permissions!';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['default_value']       = 'default value';
+$GLOBALS['TL_LANG']['rocksolid_theme_assistant']['default_value_empty'] = 'empty';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['legend_variations']   = 'Predefined variations';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['variations'][0]       = 'Select a predefined variation';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['variations'][1]       = 'Attention: Choosing a variation overwrites all fields!';
