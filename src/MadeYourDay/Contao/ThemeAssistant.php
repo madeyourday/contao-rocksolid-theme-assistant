@@ -174,15 +174,22 @@ class ThemeAssistant extends \Backend
 							'mm' => 'mm',
 						);
 						if ($field['value']) {
-							preg_match('(^([.0-9]+)([^.0-9]*))i', $field['value'], $matches);
-							$field['value'] = array(
-								'value' => $matches[1],
-								'unit' => $matches[2],
-							);
+							if (preg_match('(^([.0-9]+)([^.0-9]*))i', $field['value'], $matches) && isset($field['options'][$matches[2]])) {
+								$field['value'] = array(
+									'value' => $matches[1],
+									'unit' => $matches[2],
+								);
+							}
+							else {
+								$field['value'] = array(
+									'value' => $field['value'],
+									'unit' => '',
+								);
+							}
 						}
 						else {
 							$field['value'] = array(
-								'value' => '',
+								'value' => '0',
 								'unit' => '',
 							);
 						}
@@ -431,10 +438,10 @@ class ThemeAssistant extends \Backend
 					}
 					elseif ($data['templateVars'][$key]['type'] === 'length') {
 						if ($value && isset($value['value']) && isset($value['unit'])) {
-							$value = $value['value'] . $value['unit'];
+							$value = (trim($value['value']) ? trim($value['value']) : '0') . trim($value['unit']);
 						}
-						else {
-							$value = '';
+						if (! $value) {
+							$value = '0';
 						}
 					}
 					elseif ($data['templateVars'][$key]['type'] === 'set') {
@@ -651,7 +658,7 @@ class ThemeAssistant extends \Backend
 		}
 		elseif ($function['function'] === 'col') {
 
-			return trim(trim(number_format($function['params'][0]/$function['params'][1]*100, 3, '.', ''), '0'), '.') . '%';
+			return rtrim(rtrim(number_format($function['params'][0] / $function['params'][1] * 100, 5, '.', ''), '0'), '.') . '%';
 
 		}
 	}
