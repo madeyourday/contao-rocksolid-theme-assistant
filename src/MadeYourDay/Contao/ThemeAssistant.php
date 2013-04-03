@@ -140,6 +140,7 @@ class ThemeAssistant extends \Backend
 						$field['inputType'] = 'fileTree';
 						$field['eval'] = array(
 							'multiple' => false,
+							'fieldType' => 'radio',
 							'filesOnly' => true,
 							'extensions' => 'jpg,jpeg,png,gif,svg',
 						);
@@ -154,6 +155,7 @@ class ThemeAssistant extends \Backend
 						$field['inputType'] = 'fileTree';
 						$field['eval'] = array(
 							'multiple' => false,
+							'fieldType' => 'radio',
 							'filesOnly' => true,
 							'extensions' => 'jpg,jpeg,png,gif,svg',
 						);
@@ -315,7 +317,7 @@ class ThemeAssistant extends \Backend
 		// Prepare the code editor
 		if ($GLOBALS['TL_CONFIG']['useCE']) {
 
-			$type = 'htmlmixed';
+			$type = 'php';
 
 			if ($dc->id && substr($dc->id, -9, 4) === '.css') {
 				$type = 'css';
@@ -330,7 +332,12 @@ class ThemeAssistant extends \Backend
 
 			// Load the code editor configuration
 			ob_start();
-			include TL_ROOT . '/system/config/codeMirror.php';
+			if (file_exists(TL_ROOT . '/system/config/ace.php')) {
+				include TL_ROOT . '/system/config/ace.php';
+			}
+			else {
+				include TL_ROOT . '/system/config/codeMirror.php';
+			}
 			$codeEditor = ob_get_contents();
 			ob_end_clean();
 
