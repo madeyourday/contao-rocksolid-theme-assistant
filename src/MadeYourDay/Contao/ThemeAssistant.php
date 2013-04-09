@@ -176,7 +176,7 @@ class ThemeAssistant extends \Backend
 							'mm' => 'mm',
 						);
 						if ($field['value']) {
-							if (preg_match('(^([.0-9]+)([^.0-9]*))i', $field['value'], $matches) && isset($field['options'][$matches[2]])) {
+							if (preg_match('(^(-?[.0-9]+)([^.0-9]*))i', $field['value'], $matches) && isset($field['options'][$matches[2]])) {
 								$field['value'] = array(
 									'value' => $matches[1],
 									'unit' => $matches[2],
