@@ -28,14 +28,17 @@ class ThemeAssistant extends \Backend
 					$type = 'css';
 				}
 
-				$template = explode("\n", file_get_contents(TL_ROOT . '/' . $dc->id), 2);
-				if ($type === 'css') {
-					$data = json_decode(substr($template[0], 2, -2), true);
+				list($data, $template) = static::parseBaseFile(file_get_contents(TL_ROOT . '/' . $dc->id), $type);
+
+				// Check if parsing the file was successful
+				if (empty($data) || empty($data['fileHash']) || empty($data['templateVars']) || !trim($template)) {
+					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields']['file_invalid_error'] = array(
+						'label' => array('', ''),
+						'input_field_callback' => array('MadeYourDay\\Contao\\ThemeAssistant', 'fieldFileInvalidCallback'),
+					);
+					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['palettes']['default'] .= 'file_invalid_error;';
+					return;
 				}
-				else {
-					$data = json_decode(substr($template[0], 4, -3), true);
-				}
-				$template = $template[1];
 
 				if ($data['fileHash'] !== md5_file(TL_ROOT . '/' . substr($dc->id, 0, -5))) {
 					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields']['file_hash_warning'] = array(
@@ -282,6 +285,13 @@ class ThemeAssistant extends \Backend
 		return $GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields'][$dc->field]['value'];
 	}
 
+	public function fieldFileInvalidCallback(\DataContainer $dc)
+	{
+		return '<p class="tl_gerror"><strong>'
+		     . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['invalid_error'][0] . ':</strong> '
+		     . sprintf($GLOBALS['TL_LANG']['rocksolid_theme_assistant']['invalid_error'][1], $dc->id) . '</p>';
+	}
+
 	public function fieldFileHashCallback(\DataContainer $dc)
 	{
 		return '<p class="tl_gerror"><strong>'
@@ -389,14 +399,13 @@ class ThemeAssistant extends \Backend
 				$type = 'css';
 			}
 
-			$template = explode("\n", file_get_contents(TL_ROOT . '/' . $dc->id), 2);
-			if ($type === 'css') {
-				$data = json_decode(substr($template[0], 2, -2), true);
+			list($data, $template) = static::parseBaseFile(file_get_contents(TL_ROOT . '/' . $dc->id), $type);
+
+			// Check if parsing the file was successful
+			if (empty($data) || empty($data['fileHash']) || empty($data['templateVars']) || !trim($template)) {
+				$this->redirect('contao/main.php?act=error');
+				return;
 			}
-			else {
-				$data = json_decode(substr($template[0], 4, -3), true);
-			}
-			$template = $template[1];
 
 			if (!empty($rawPost['variations']) && substr($rawPost['variations'], 0, 9) === 'variation') {
 
@@ -749,6 +758,29 @@ class ThemeAssistant extends \Backend
 		if((3 * $H) < 2) return ($v1 + ($v2 - $v1) * ((2 / 3) - $H) * 6);
 
 		return $v1;
+	}
+
+	protected static function parseBaseFile($source, $type)
+	{
+		$template = explode("\n", $source, 2);
+
+		if (substr($template[0], 0, 3) === chr(239) . chr(187) . chr(191)) {
+			// UTF-8 BOM detected
+			$template[0] = substr($template[0], 3);
+		}
+
+		$template[0] = trim($template[0]);
+
+		if ($type === 'css') {
+			$data = json_decode(substr($template[0], 2, -2), true);
+		}
+		else {
+			$data = json_decode(substr($template[0], 4, -3), true);
+		}
+
+		$template = $template[1];
+
+		return array($data, $template);
 	}
 
 	protected static function isWriteable($path)
