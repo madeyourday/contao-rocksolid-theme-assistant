@@ -17,6 +17,97 @@ namespace MadeYourDay\Contao;
  */
 class ThemeAssistant extends \Backend
 {
+	public function executePostActionsHook($action, $dc)
+	{
+		if (!$dc instanceof ThemeAssistantDataContainer) {
+			return;
+		}
+
+		if ($action === 'loadFiletree') {
+
+			$arrData['strTable'] = $dc->table;
+			$arrData['id'] = $dc->id;
+			$arrData['name'] = \Input::post('name');
+
+			$objWidget = new $GLOBALS['BE_FFL']['fileSelector']($arrData, $dc);
+
+			// Load a particular node
+			if (\Input::post('folder', true) != '')
+			{
+				echo $objWidget->generateAjax(\Input::post('folder', true), \Input::post('field'), intval(\Input::post('level')));
+			}
+			else
+			{
+				echo $objWidget->generate();
+			}
+			exit;
+
+		}
+
+		if ($action === 'reloadPagetree' || $action === 'reloadFiletree') {
+
+			$intId = \Input::get('id');
+			$strField = $dc->field = \Input::post('name');
+
+			// Handle the keys in "edit multiple" mode
+			if (\Input::get('act') == 'editAll')
+			{
+				$intId = preg_replace('/.*_([0-9a-zA-Z]+)$/', '$1', $strField);
+				$strField = preg_replace('/(.*)_[0-9a-zA-Z]+$/', '$1', $strField);
+			}
+
+			// The field does not exist
+			if (!isset($GLOBALS['TL_DCA'][$dc->table]['fields'][$strField]))
+			{
+				$this->log('Field "' . $strField . '" does not exist in DCA "' . $dc->table . '"', 'Ajax executePostActions()', TL_ERROR);
+				header('HTTP/1.1 400 Bad Request');
+				die('Bad Request');
+			}
+
+			$varValue = \Input::post('value', true);
+			$strKey = ($action == 'reloadPagetree') ? 'pageTree' : 'fileTree';
+
+			// Convert the selected values
+			if ($varValue != '')
+			{
+				$varValue = trimsplit("\t", $varValue);
+
+				// Automatically add resources to the DBAFS
+				if ($strKey == 'fileTree')
+				{
+					foreach ($varValue as $k=>$v)
+					{
+						if (version_compare(VERSION, '3.2', '<')) {
+							$varValue[$k] = \Dbafs::addResource($v)->id;
+						}
+						else {
+							$varValue[$k] = \Dbafs::addResource($v)->uuid;
+						}
+					}
+				}
+
+				$varValue = serialize($varValue);
+			}
+
+			$GLOBALS['TL_CONFIG'][$strField] = $varValue;
+			$dc->activeRecord = null;
+
+			// Build the attributes based on the "eval" array
+			$arrAttribs = $GLOBALS['TL_DCA'][$dc->table]['fields'][$strField]['eval'];
+
+			$arrAttribs['id'] = $dc->field;
+			$arrAttribs['name'] = $dc->field;
+			$arrAttribs['value'] = $varValue;
+			$arrAttribs['strTable'] = $dc->table;
+			$arrAttribs['strField'] = $strField;
+
+			$objWidget = new $GLOBALS['BE_FFL'][$strKey]($arrAttribs);
+			echo $objWidget->generate();
+			exit;
+
+		}
+	}
+
 	public function onloadCallback(\DataContainer $dc)
 	{
 		if ($dc->id) {
@@ -139,10 +230,20 @@ class ThemeAssistant extends \Backend
 						}
 					}
 					elseif ($var['type'] === 'image') {
-						$field['value'] = \FilesModel::findByPath($GLOBALS['TL_CONFIG']['uploadPath'] . '/' . $field['value'])->id;
+						$field['value'] = \FilesModel::findByPath($GLOBALS['TL_CONFIG']['uploadPath'] . '/' . $field['value']);
+						if ($field['value']) {
+							if (version_compare(VERSION, '3.2', '<')) {
+								$field['value'] = $field['value']->id;
+							}
+							else {
+								$field['value'] = $field['value']->uuid;
+							}
+						}
+						else {
+							$field['value'] = '';
+						}
 						$field['inputType'] = 'fileTree';
 						$field['eval'] = array(
-							'multiple' => false,
 							'fieldType' => 'radio',
 							'filesOnly' => true,
 							'extensions' => 'jpg,jpeg,png,gif,svg',
@@ -150,14 +251,24 @@ class ThemeAssistant extends \Backend
 					}
 					elseif ($var['type'] === 'background-image') {
 						if (substr($field['value'], 0, 5) === 'url("' && substr($field['value'], -2) === '")') {
-							$field['value'] = \FilesModel::findByPath(static::resolveRelativePath(dirname($dc->id) . '/' . substr($field['value'], 5, -2)))->id;
+							$field['value'] = \FilesModel::findByPath(static::resolveRelativePath(dirname($dc->id) . '/' . substr($field['value'], 5, -2)));
+							if ($field['value']) {
+								if (version_compare(VERSION, '3.2', '<')) {
+									$field['value'] = $field['value']->id;
+								}
+								else {
+									$field['value'] = $field['value']->uuid;
+								}
+							}
+							else {
+								$field['value'] = '';
+							}
 						}
 						else {
 							$field['value'] = '';
 						}
 						$field['inputType'] = 'fileTree';
 						$field['eval'] = array(
-							'multiple' => false,
 							'fieldType' => 'radio',
 							'filesOnly' => true,
 							'extensions' => 'jpg,jpeg,png,gif,svg',
@@ -448,11 +559,34 @@ class ThemeAssistant extends \Backend
 						$value = (bool)$value;
 					}
 					elseif ($data['templateVars'][$key]['type'] === 'image') {
-						$value = substr(\FilesModel::findByPk($value)->path, strlen($GLOBALS['TL_CONFIG']['uploadPath'])+1);
+						$file = null;
+						if (trim($value)) {
+							if (version_compare(VERSION, '3.2', '<')) {
+								$file = \FilesModel::findByPk($value);
+							}
+							else {
+								$file = \FilesModel::findByUuid(\String::uuidToBin($value));
+							}
+						}
+						if ($file) {
+							$value = substr($file->path, strlen($GLOBALS['TL_CONFIG']['uploadPath'])+1);
+						}
+						else {
+							$value = '';
+						}
 					}
 					elseif ($data['templateVars'][$key]['type'] === 'background-image') {
-						if ($value && \FilesModel::findByPk($value)) {
-							$value = 'url("' . static::getRelativePath(dirname($dc->id), \FilesModel::findByPk($value)->path) . '")';
+						$file = null;
+						if (trim($value)) {
+							if (version_compare(VERSION, '3.2', '<')) {
+								$file = \FilesModel::findByPk($value);
+							}
+							else {
+								$file = \FilesModel::findByUuid(\String::uuidToBin($value));
+							}
+						}
+						if ($file) {
+							$value = 'url("' . static::getRelativePath(dirname($dc->id), $file->path) . '")';
 						}
 						else {
 							$value = 'none';

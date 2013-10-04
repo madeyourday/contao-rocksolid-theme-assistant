@@ -12,6 +12,8 @@
  * @author Martin Auswöger <martin@madeyourday.co>
  */
 
+$GLOBALS['TL_HOOKS']['executePostActions'][] = array('MadeYourDay\\Contao\\ThemeAssistant', 'executePostActionsHook');
+
 $GLOBALS['BE_MOD']['design']['rocksolid_theme_assistant'] = array(
 	'tables' => array('rocksolid_theme_assistant'),
 	'icon'   => 'system/modules/rocksolid-theme-assistant/assets/images/icon.png',
