@@ -625,7 +625,12 @@ class ThemeAssistant extends \Backend
 			if(!empty($rawPost['source'])){
 				$template = $rawPost['source'];
 			}
-			file_put_contents(TL_ROOT . '/' . substr($dc->id, 0, -5), $this->renderTemplate($template, $data, $type));
+			$rendered = $this->renderTemplate($template, $data, $type);
+			if (!$rendered) {
+				$this->log('Parse error in Theme Assistant template "' . $dc->id . '"', 'MadeYourDay\Contao\ThemeAssistant::onsubmitCallback', TL_ERROR);
+				return $this->redirect('contao/main.php?act=error');
+			}
+			file_put_contents(TL_ROOT . '/' . substr($dc->id, 0, -5), $rendered);
 			$data['fileHash'] = md5_file(TL_ROOT . '/' . substr($dc->id, 0, -5));
 			if($type === 'css'){
 				$template = "/*".json_encode($data) . "*/\n" . $template;
@@ -698,11 +703,16 @@ class ThemeAssistant extends \Backend
 
 	protected function parsePhpCode($_phpCode, $data)
 	{
+		$syntaxOK = @eval('return true;?>' . $_phpCode . '<?php ');
+		if (!$syntaxOK) {
+			return '';
+		}
+
 		extract($data);
 		ob_start();
 		eval('?>' . $_phpCode . '<?php ');
 
-		return ob_get_clean();
+		return ob_get_clean() ?: '';
 	}
 
 	protected function renderCssTemplate($template, $data)
@@ -710,32 +720,50 @@ class ThemeAssistant extends \Backend
 		$replaceFrom = array();
 		$replaceTo = array();
 
+		// Backwards compatibility
 		foreach ($data['templateVars'] as $var) {
 			$replaceFrom[] = '/***rst' . $var['placeholder'] . '***/';
 			$replaceTo[] = $var['value'];
 		}
 
+		// Backwards compatibility
+		$data['colorFunctions'] = isset($data['colorFunctions'])
+			? $data['colorFunctions']
+			: array();
 		foreach ($data['colorFunctions'] as $colorFunction) {
 			$replaceFrom[] = '/***rst' . $colorFunction['placeholder'] . '***/';
-			$replaceTo[] = $this->executeColorFunction($colorFunction, $data);
+			$replaceTo[] = $this->renderCssFunction($colorFunction, $data);
 		}
 
 		$template = str_replace($replaceFrom, $replaceTo, $template);
 
 		$replace = array(
 			'(<\\?php)i' => '<rst?php',
+			'(/\\*\\:=\\s(.*?)\\s\\*/)i' => '<?php echo $1 ?>',
 			'([ \\t]*/\\*\\:(.*?)\\*/)is' => '<?php $1 ?>',
 		);
 		$template = preg_replace(array_keys($replace), array_values($replace), $template);
-		$template = $this->parsePhpCode($template, array('tv' => array_map(function($var){
-			return $var['value'];
-		}, $data['templateVars'])));
+		$self = $this;
+		$templatesData = array(
+			'v' => array_map(function($var){
+				return $var['value'];
+			}, $data['templateVars']),
+			'f' => function() use($self) {
+				$arguments = func_get_args();
+				return $self->executeCssFunction(array_shift($arguments), $arguments);
+			},
+		);
+
+		// Backwards compatibility
+		$templatesData['tv'] = $templatesData['v'];
+
+		$template = $this->parsePhpCode($template, $templatesData);
 		$template = str_replace('<rst?php', '<?php', $template);
 
 		return $template;
 	}
 
-	protected function executeColorFunction($function, $data)
+	protected function renderCssFunction($function, $data)
 	{
 		foreach ($function['params'] as $key => $param) {
 
@@ -762,20 +790,33 @@ class ThemeAssistant extends \Backend
 				return $matches[0];
 			}, $function['params'][$key]);
 
-		}
-
-		if ($function['function'] === 'rgba') {
-
-			$color = $function['params'][0];
-
-			return 'rgba('.hexdec(substr($color, 1, 2)).', '.hexdec(substr($color, 3, 2)).', '.hexdec(substr($color, 5, 2)).', '.$function['params'][1].')';
+			$function['params'][$key] = trim($function['params'][$key]);
 
 		}
-		elseif ($function['function'] === 'mix') {
 
-			$color1 = substr(trim($function['params'][0]), 1);
-			$color2 = substr(trim($function['params'][1]), 1);
-			$weight = substr(trim($function['params'][2]), 0, -1)/100;
+		return $this->executeCssFunction($function['function'], $function['params']);
+	}
+
+	function executeCssFunction($function, $params)
+	{
+		if ($function === 'rgba') {
+
+			$color = $params[0];
+
+			return 'rgba('.hexdec(substr($color, 1, 2)).', '.hexdec(substr($color, 3, 2)).', '.hexdec(substr($color, 5, 2)).', '.$params[1].')';
+
+		}
+		if ($function === 'tint' || $function === 'shade') {
+
+			$function = 'mix';
+			array_unshift($params, $function === 'tint' ? '#ffffff' : '#000000');
+
+		}
+		if ($function === 'mix') {
+
+			$color1 = substr(trim($params[0]), 1);
+			$color2 = substr(trim($params[1]), 1);
+			$weight = substr(trim($params[2]), 0, -1)/100;
 
 			return strtolower('#'
 				.sprintf("%02X",(int)((hexdec(substr($color1, 0, 2))*$weight) + (hexdec(substr($color2, 0, 2))*(1-$weight)))) // red
@@ -784,26 +825,50 @@ class ThemeAssistant extends \Backend
 			);
 
 		}
-		elseif ($function['function'] === 'lighten' || $function['function'] === 'darken') {
+		if ($function === 'lighten' || $function === 'darken') {
 
-			$color = substr($function['params'][0], 1);
-			$weight = substr($function['params'][1], 0, -1)/100;
+			$color = substr($params[0], 1);
+			$weight = substr($params[1], 0, -1)/100;
 			$color = static::colorRgbToHsl(array(hexdec(substr($color, 0, 2)), hexdec(substr($color, 2, 2)), hexdec(substr($color, 4, 2))));
-			$color[2] += $weight * ($function['function'] === 'lighten' ? 1 : -1);
-			if ($color[2] < 0) {
-				$color[2] = 0;
+			$color[2] += $weight * ($function === 'lighten' ? 1 : -1);
+			$color[2] = max(0, min(1, $color[2]));
+			$color = static::colorHslToRgb($color);
+
+			return '#'.strtolower(sprintf("%02X", round($color[0])) . sprintf("%02X", round($color[1])) . sprintf("%02X", round($color[2])));
+
+		}
+		if ($function === 'saturate' || $function === 'desaturate') {
+
+			$color = substr($params[0], 1);
+			$weight = substr($params[1], 0, -1)/100;
+			$color = static::colorRgbToHsl(array(hexdec(substr($color, 0, 2)), hexdec(substr($color, 2, 2)), hexdec(substr($color, 4, 2))));
+			$color[1] += $weight * ($function === 'saturate' ? 1 : -1);
+			$color[1] = max(0, min(1, $color[1]));
+			$color = static::colorHslToRgb($color);
+
+			return '#'.strtolower(sprintf("%02X", round($color[0])) . sprintf("%02X", round($color[1])) . sprintf("%02X", round($color[2])));
+
+		}
+		if ($function === 'adjust-hue') {
+
+			$color = substr($params[0], 1);
+			$degrees = $params[1] / 360;
+			$color = static::colorRgbToHsl(array(hexdec(substr($color, 0, 2)), hexdec(substr($color, 2, 2)), hexdec(substr($color, 4, 2))));
+			$color[0] += $degrees;
+			while ($color[0] < 0) {
+				$color[0] += 1;
 			}
-			elseif ($color[2] > 1) {
-				$color[2] = 1;
+			while ($color[0] > 1) {
+				$color[0] -= 1;
 			}
 			$color = static::colorHslToRgb($color);
 
 			return '#'.strtolower(sprintf("%02X", round($color[0])) . sprintf("%02X", round($color[1])) . sprintf("%02X", round($color[2])));
 
 		}
-		elseif ($function['function'] === 'invert') {
+		if ($function === 'invert') {
 
-			$color = substr($function['params'][0], 1);
+			$color = substr($params[0], 1);
 
 			return strtolower('#'
 				.sprintf("%02X", 255 - (int)hexdec(substr($color, 0, 2))) // red
@@ -812,11 +877,30 @@ class ThemeAssistant extends \Backend
 			);
 
 		}
-		elseif ($function['function'] === 'col') {
+		if ($function === 'col') {
 
-			return rtrim(rtrim(number_format($function['params'][0] / $function['params'][1] * 100, 5, '.', ''), '0'), '.') . '%';
+			return rtrim(rtrim(number_format($params[0] / $params[1] * 100, 5, '.', ''), '0'), '.') . '%';
 
 		}
+		if ($function === 'lightness') {
+
+			$color = substr($params[0], 1);
+			$color = static::colorRgbToHsl(array(hexdec(substr($color, 0, 2)), hexdec(substr($color, 2, 2)), hexdec(substr($color, 4, 2))));
+
+			return rtrim(rtrim(number_format($color[2] * 100, 5, '.', ''), '0'), '.') . '%';
+
+		}
+		if ($function === 'saturation') {
+
+			$color = substr($params[0], 1);
+			$color = static::colorRgbToHsl(array(hexdec(substr($color, 0, 2)), hexdec(substr($color, 2, 2)), hexdec(substr($color, 4, 2))));
+
+			return rtrim(rtrim(number_format($color[1] * 100, 5, '.', ''), '0'), '.') . '%';
+
+		}
+
+		$this->log('Unknow CSS function "' . $function . '(' . implode(', ', $params) . ')" in Theme Assistant template', 'MadeYourDay\Contao\ThemeAssistant::executeCssFunction', TL_ERROR);
+		return '';
 	}
 
 	protected function colorRgbToHsl($rgb)
