@@ -207,6 +207,10 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 
 		$objFile = new \File($this->intId);
 
+		$this->objActiveRecord = new \stdClass;
+		$this->objActiveRecord->intId = $this->intId;
+		$this->objActiveRecord->id = $this->intId;
+
 		$return = '';
 
 		// Build an array from boxes and rows
@@ -315,6 +319,9 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 							}
 						}
 					}
+
+					// Re-set the current value
+					$this->objActiveRecord->{$this->strField} = $this->varValue;
 
 					// Build the row and pass the current palette string (thanks to Tristan Lins)
 					$blnAjax ? $strAjax .= $this->row($this->strPalette) : $return .= $this->row($this->strPalette);
