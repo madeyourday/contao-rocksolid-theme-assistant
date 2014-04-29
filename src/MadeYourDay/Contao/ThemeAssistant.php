@@ -375,14 +375,6 @@ class ThemeAssistant extends \Backend
 
 				}
 
-				$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['palettes']['default'] .= ';{legend_source:hide},source';
-				$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields']['source'] = array(
-					'label'                => $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['source'],
-					'input_field_callback' => array('MadeYourDay\\Contao\\ThemeAssistant', 'fieldCallbackSource'),
-					'load_callback'        => array(array('MadeYourDay\\Contao\\ThemeAssistant', 'fieldLoadCallback')),
-					'value'                => $template,
-				);
-
 			}
 			else {
 				$this->redirect('contao/main.php?act=error');
@@ -429,54 +421,6 @@ class ThemeAssistant extends \Backend
 		     . '		}'
 		     . '	});'
 		     . '</script>';
-	}
-
-	public function fieldCallbackSource(\DataContainer $dc)
-	{
-		$codeEditor = '';
-		$editorName = 'none';
-
-		// Prepare the code editor
-		if ($GLOBALS['TL_CONFIG']['useCE']) {
-
-			$type = 'php';
-
-			if ($dc->id && substr($dc->id, -9, 4) === '.css') {
-				$type = 'css';
-			}
-
-			$this->ceFields = array(array(
-				'id'   => 'ctrl_source',
-				'type' => $type,
-			));
-
-			$this->language = $GLOBALS['TL_LANGUAGE'];
-
-			// Load the code editor configuration
-			ob_start();
-			if (file_exists(TL_ROOT . '/system/config/ace.php')) {
-				$editorName = 'ace';
-				include TL_ROOT . '/system/config/ace.php';
-			}
-			else {
-				$editorName = 'codeMirror';
-				include TL_ROOT . '/system/config/codeMirror.php';
-			}
-			$codeEditor = ob_get_contents();
-			ob_end_clean();
-
-		}
-
-		return '
-			<div class="tl_tbox">
-				' . ($editorName === 'codeMirror' ?
-					'<p class="tl_info">' . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['editor_info'] . '</p>' :
-					''
-				) . '
-				<h3><label for="ctrl_source">' . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['source'][0] . '</label></h3>
-				<textarea name="source" id="ctrl_source" class="tl_textarea monospace" rows="12" cols="80" style="height:500px" onfocus="Backend.getScrollOffset()">' . "\n" . htmlspecialchars($dc->value) . '</textarea>
-				'. (($GLOBALS['TL_CONFIG']['showHelp']) ? '<p class="tl_help tl_tip">' . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['source'][1] . '</p>' : '') . '
-			</div>' . "\n" . $codeEditor;
 	}
 
 	public function colorWizardCallback(\DataContainer $dc)
@@ -621,10 +565,6 @@ class ThemeAssistant extends \Backend
 
 			}
 
-			// Accessing raw post data
-			if(!empty($rawPost['source'])){
-				$template = $rawPost['source'];
-			}
 			$rendered = $this->renderTemplate($template, $data, $type);
 			if (!$rendered) {
 				$this->log('Parse error in Theme Assistant template "' . $dc->id . '"', 'MadeYourDay\Contao\ThemeAssistant::onsubmitCallback', TL_ERROR);
