@@ -443,16 +443,6 @@ class ThemeAssistant extends \Backend
 	public function onsubmitCallback(\DataContainer $dc)
 	{
 
-		$rawPost = $_POST;
-		if (
-			(function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc()) ||
-			(ini_get('magic_quotes_sybase') && (strtolower(ini_get('magic_quotes_sybase')) !== 'off'))
-		) {
-			array_walk_recursive($rawPost, function(&$value, $key){
-				$value = stripslashes($value);
-			});
-		}
-
 		if ($dc->id && substr($dc->id, -5) === '.base') {
 
 			$type = 'html';
@@ -468,9 +458,9 @@ class ThemeAssistant extends \Backend
 				return;
 			}
 
-			if (!empty($rawPost['variations']) && substr($rawPost['variations'], 0, 9) === 'variation') {
+			if (\Input::post('variations') && substr(\Input::post('variations'), 0, 9) === 'variation') {
 
-				$variation = (int) substr($rawPost['variations'], 9);
+				$variation = (int) substr(\Input::post('variations'), 9);
 				foreach ($data['templateVars'] as $key => $var) {
 					if (isset($data['templateVars'][$key]['defaultValues'][$variation])) {
 						$data['templateVars'][$key]['value'] = $data['templateVars'][$key]['defaultValues'][$variation];
@@ -485,11 +475,11 @@ class ThemeAssistant extends \Backend
 
 				foreach ($data['templateVars'] as $key => $var) {
 
-					if(!isset($rawPost[$key])){
+					if(\Input::post($key) === null){
 						continue;
 					}
 
-					$value = $rawPost[$key];
+					$value = \Input::post($key);
 
 					if ($data['templateVars'][$key]['type'] === 'color') {
 						if (strlen($value) === 6) {
