@@ -25,11 +25,18 @@ class ThemeAssistant extends \Backend
 
 		if ($action === 'loadFiletree') {
 
-			$arrData['strTable'] = $dc->table;
-			$arrData['id'] = $dc->id;
-			$arrData['name'] = \Input::post('name');
-
-			$objWidget = new $GLOBALS['BE_FFL']['fileSelector']($arrData, $dc);
+			// Backwards compatibility for Contao 3.2
+			if (version_compare(VERSION, '3.3', '<')) {
+				$arrData['strTable'] = $dc->table;
+				$arrData['id'] = $dc->id;
+				$arrData['name'] = \Input::post('name');
+				$objWidget = new $GLOBALS['BE_FFL']['fileSelector']($arrData, $dc);
+			}
+			else {
+				$strField = \Input::post('name');
+				$strClass = $GLOBALS['BE_FFL']['fileSelector'];
+				$objWidget = new $strClass($strClass::getAttributesFromDca($GLOBALS['TL_DCA'][$dc->table]['fields'][$strField], $strField, null, $strField, $dc->table, $dc));
+			}
 
 			// Load a particular node
 			if (\Input::post('folder', true) != '')
@@ -92,16 +99,26 @@ class ThemeAssistant extends \Backend
 			$GLOBALS['TL_CONFIG'][$strField] = $varValue;
 			$dc->activeRecord = null;
 
-			// Build the attributes based on the "eval" array
-			$arrAttribs = $GLOBALS['TL_DCA'][$dc->table]['fields'][$strField]['eval'];
+			// Backwards compatibility for Contao 3.2
+			if (version_compare(VERSION, '3.3', '<')) {
 
-			$arrAttribs['id'] = $dc->field;
-			$arrAttribs['name'] = $dc->field;
-			$arrAttribs['value'] = $varValue;
-			$arrAttribs['strTable'] = $dc->table;
-			$arrAttribs['strField'] = $strField;
+				// Build the attributes based on the "eval" array
+				$arrAttribs = $GLOBALS['TL_DCA'][$dc->table]['fields'][$strField]['eval'];
 
-			$objWidget = new $GLOBALS['BE_FFL'][$strKey]($arrAttribs);
+				$arrAttribs['id'] = $dc->field;
+				$arrAttribs['name'] = $dc->field;
+				$arrAttribs['value'] = $varValue;
+				$arrAttribs['strTable'] = $dc->table;
+				$arrAttribs['strField'] = $strField;
+
+				$objWidget = new $GLOBALS['BE_FFL'][$strKey]($arrAttribs);
+
+			}
+			else {
+				$strClass = $GLOBALS['BE_FFL'][$strKey];
+				$objWidget = new $strClass($strClass::getAttributesFromDca($GLOBALS['TL_DCA'][$dc->table]['fields'][$strField], $strField, $varValue, $strField, $dc->table, $dc));
+			}
+
 			echo $objWidget->generate();
 			exit;
 
