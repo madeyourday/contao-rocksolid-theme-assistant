@@ -755,8 +755,8 @@ class ThemeAssistant extends \Backend
 		}
 		if ($function === 'tint' || $function === 'shade') {
 
-			$function = 'mix';
 			array_unshift($params, $function === 'tint' ? '#ffffff' : '#000000');
+			$function = 'mix';
 
 		}
 		if ($function === 'mix') {
