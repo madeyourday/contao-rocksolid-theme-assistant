@@ -96,8 +96,9 @@ class ThemeAssistant extends \Backend
 				$varValue = serialize($varValue);
 			}
 
-			$GLOBALS['TL_CONFIG'][$strField] = $varValue;
-			$dc->activeRecord = null;
+			$dc->activeRecord = new \stdClass;
+			$dc->activeRecord->id = $intId;
+			$dc->activeRecord->$strField = $varValue;
 
 			// Backwards compatibility for Contao 3.2
 			if (version_compare(VERSION, '3.3', '<')) {
@@ -402,6 +403,17 @@ class ThemeAssistant extends \Backend
 
 	public function fieldLoadCallback($value, \DataContainer $dc)
 	{
+		if (
+			(
+				\Environment::get('script') === 'contao/file.php'
+				|| \Environment::get('script') === 'contao/page.php'
+			)
+			&& \Input::get('field') === $dc->field
+			&& \Input::get('value')
+		) {
+			return \Input::get('value');
+		}
+
 		return $GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields'][$dc->field]['value'];
 	}
 
