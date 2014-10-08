@@ -409,9 +409,8 @@ class ThemeAssistant extends \Backend
 				|| \Environment::get('script') === 'contao/page.php'
 			)
 			&& \Input::get('field') === $dc->field
-			&& \Input::get('value')
 		) {
-			return \Input::get('value');
+			return $value;
 		}
 
 		return $GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields'][$dc->field]['value'];
