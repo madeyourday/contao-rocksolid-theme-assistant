@@ -306,6 +306,10 @@ class ThemeAssistant extends \Backend
 							'in' => 'in',
 							'cm' => 'cm',
 							'mm' => 'mm',
+							'vw' => 'vw',
+							'vh' => 'vh',
+							'vmin' => 'vmin',
+							'vmax' => 'vmax',
 						);
 						if ($field['value']) {
 							if (preg_match('(^(-?[.0-9]+)([^.0-9]*))i', $field['value'], $matches) && isset($field['options'][$matches[2]])) {
