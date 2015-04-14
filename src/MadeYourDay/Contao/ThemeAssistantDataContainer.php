@@ -448,7 +448,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 	{
 	}
 
-	public function save()
+	public function save($varValue)
 	{
 	}
 }
