@@ -407,10 +407,21 @@ class ThemeAssistant extends \Backend
 
 	public function fieldLoadCallback($value, \DataContainer $dc)
 	{
+		if (version_compare(VERSION, '4.0', '>=')) {
+			$route = \System::getContainer()->get('request')->get('_route');
+		}
+		else {
+			$route = str_replace(
+				array('contao/', '.php'),
+				array('contao_backend_', ''),
+				\Environment::get('script')
+			);
+		}
+
 		if (
 			(
-				\Environment::get('script') === 'contao/file.php'
-				|| \Environment::get('script') === 'contao/page.php'
+				$route === 'contao_backend_file'
+				|| $route === 'contao_backend_page'
 			)
 			&& \Input::get('field') === $dc->field
 		) {
