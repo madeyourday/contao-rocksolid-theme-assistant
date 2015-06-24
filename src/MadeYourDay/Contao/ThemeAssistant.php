@@ -468,13 +468,17 @@ class ThemeAssistant extends \Backend
 
 	public function colorWizardCallback(\DataContainer $dc)
 	{
+		$assetsDir = version_compare(VERSION, '4.0', '>=')
+			? 'assets/colorpicker'
+			: 'assets/mootools/colorpicker/' . COLORPICKER;
+
 		return ' '.$this->generateImage('pickcolor.gif', $GLOBALS['TL_LANG']['MSC']['colorpicker'], 'style="vertical-align:top;cursor:pointer" title="' . specialchars($GLOBALS['TL_LANG']['MSC']['colorpicker']) . '" id="moo_' . $dc->field . '"') . '
 			<script>
 				window.addEvent("domready", function() {
 					new MooRainbow("moo_' . $dc->field . '", {
 						id:"ctrl_' . $dc->field . '",
 						startColor:((cl = $("ctrl_' . $dc->field . '").value.hexToRgb(true)) ? cl : [255, 0, 0]),
-						imgPath:"assets/mootools/colorpicker/'.COLORPICKER.'/images/",
+						imgPath:"' . $assetsDir . '/images/",
 						onComplete: function(color){
 							$("ctrl_' . $dc->field . '").value = color.hex.replace("#", "");
 						}
