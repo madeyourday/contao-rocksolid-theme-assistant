@@ -574,10 +574,15 @@ class ThemeAssistant extends \Backend
 						}
 					}
 					elseif ($data['templateVars'][$key]['type'] === 'length') {
-						if ($value && isset($value['value']) && isset($value['unit'])) {
-							$value = (trim($value['value']) ? trim($value['value']) : '0') . trim($value['unit']);
+						if (is_array($value)) {
+							$value['value'] = empty($value['value']) ? '0' : $value['value'];
+							$value['unit'] = empty($value['unit']) ? '' : $value['unit'];
+							$value = trim($value['value']) . trim($value['unit']);
 						}
-						if (! $value) {
+						else if (is_string($value) && trim($value)) {
+							$value = trim($value);
+						}
+						else {
 							$value = '0';
 						}
 					}
