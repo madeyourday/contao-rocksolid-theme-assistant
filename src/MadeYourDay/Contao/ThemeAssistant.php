@@ -546,7 +546,7 @@ class ThemeAssistant extends \Backend
 								$file = \FilesModel::findByPk($value);
 							}
 							else {
-								$file = \FilesModel::findByUuid(\String::uuidToBin($value));
+								$file = \FilesModel::findByUuid(\StringUtil::uuidToBin($value));
 							}
 						}
 						if ($file) {
@@ -563,7 +563,7 @@ class ThemeAssistant extends \Backend
 								$file = \FilesModel::findByPk($value);
 							}
 							else {
-								$file = \FilesModel::findByUuid(\String::uuidToBin($value));
+								$file = \FilesModel::findByUuid(\StringUtil::uuidToBin($value));
 							}
 						}
 						if ($file) {

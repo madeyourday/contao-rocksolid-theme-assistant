@@ -46,7 +46,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 			foreach ($GLOBALS['TL_DCA'][$this->strTable]['config']['onload_callback'] as $callback) {
 				if (is_array($callback)) {
 					$this->import($callback[0]);
-					$this->$callback[0]->$callback[1]($this);
+					$this->{$callback[0]}->{$callback[1]}($this);
 				}
 			}
 		}
@@ -315,7 +315,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 						foreach ($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['load_callback'] as $callback) {
 							if (is_array($callback)) {
 								$this->import($callback[0]);
-								$this->varValue = $this->$callback[0]->$callback[1]($this->varValue, $this);
+								$this->varValue = $this->{$callback[0]}->{$callback[1]}($this->varValue, $this);
 							}
 						}
 					}
@@ -372,7 +372,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 			if (is_array($GLOBALS['TL_DCA'][$this->strTable]['config']['onsubmit_callback'])) {
 				foreach ($GLOBALS['TL_DCA'][$this->strTable]['config']['onsubmit_callback'] as $callback) {
 					$this->import($callback[0]);
-					$this->$callback[0]->$callback[1]($this);
+					$this->{$callback[0]}->{$callback[1]}($this);
 				}
 			}
 
