@@ -408,7 +408,7 @@ class ThemeAssistant extends \Backend
 	public function fieldLoadCallback($value, \DataContainer $dc)
 	{
 		if (version_compare(VERSION, '4.0', '>=')) {
-			$route = \System::getContainer()->get('request')->get('_route');
+			$route = \System::getContainer()->get('request_stack')->getCurrentRequest()->get('_route');
 		}
 		else {
 			$route = str_replace(
