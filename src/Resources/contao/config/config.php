@@ -17,7 +17,7 @@ if (!class_exists('StringUtil') && class_exists('String')) {
 	class_alias('String', 'StringUtil');
 }
 
-$GLOBALS['TL_HOOKS']['executePostActions'][] = array('MadeYourDay\\Contao\\ThemeAssistant', 'executePostActionsHook');
+$GLOBALS['TL_HOOKS']['executePostActions'][] = array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'executePostActionsHook');
 
 $GLOBALS['BE_MOD']['design']['rocksolid_theme_assistant'] = array(
 	'tables' => array('rocksolid_theme_assistant'),
@@ -27,4 +27,4 @@ $GLOBALS['BE_MOD']['design']['rocksolid_theme_assistant'] = array(
 	) . '/images/icon.png',
 );
 
-$GLOBALS['BE_FFL']['mydMultiListWizard'] = 'MadeYourDay\\Contao\\Widget\\MultiListWizard';
+$GLOBALS['BE_FFL']['mydMultiListWizard'] = 'MadeYourDay\\RockSolidThemeAssistant\\Widget\\MultiListWizard';

@@ -9,7 +9,7 @@
  * therefore licensed under their own license <http://contao.org/>
  */
 
-namespace MadeYourDay\Contao;
+namespace MadeYourDay\RockSolidThemeAssistant;
 
 /**
  * RockSolid Theme Assistant DataContainer

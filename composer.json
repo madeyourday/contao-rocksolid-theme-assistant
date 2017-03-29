@@ -22,7 +22,7 @@
 	},
 	"autoload":{
 		"psr-4": {
-			"MadeYourDay\\Contao\\": "src/"
+			"MadeYourDay\\RockSolidThemeAssistant\\": "src/"
 		},
 		"psr-0": {
 			"DC_RockSolidThemeAssistant": ""

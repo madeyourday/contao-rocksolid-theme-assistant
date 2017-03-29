@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace MadeYourDay\Contao;
+namespace MadeYourDay\RockSolidThemeAssistant;
 
 /**
  * RockSolid Theme Assistant DCA
@@ -143,7 +143,7 @@ class ThemeAssistant extends \Backend
 				if (empty($data) || empty($data['fileHash']) || empty($data['templateVars']) || !trim($template)) {
 					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields']['file_invalid_error'] = array(
 						'label' => array('', ''),
-						'input_field_callback' => array('MadeYourDay\\Contao\\ThemeAssistant', 'fieldFileInvalidCallback'),
+						'input_field_callback' => array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'fieldFileInvalidCallback'),
 					);
 					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['palettes']['default'] .= 'file_invalid_error;';
 					return;
@@ -152,7 +152,7 @@ class ThemeAssistant extends \Backend
 				if ($data['fileHash'] !== md5_file(TL_ROOT . '/' . substr($dc->id, 0, -5))) {
 					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields']['file_hash_warning'] = array(
 						'label' => array('', ''),
-						'input_field_callback' => array('MadeYourDay\\Contao\\ThemeAssistant', 'fieldFileHashCallback'),
+						'input_field_callback' => array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'fieldFileHashCallback'),
 					);
 					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['palettes']['default'] .= 'file_hash_warning;';
 				}
@@ -160,7 +160,7 @@ class ThemeAssistant extends \Backend
 				if (!static::isWriteable(TL_ROOT . '/' . substr($dc->id, 0, -5)) || !static::isWriteable(TL_ROOT . '/' . $dc->id)) {
 					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields']['file_writable_warning'] = array(
 						'label' => array('', ''),
-						'input_field_callback' => array('MadeYourDay\\Contao\\ThemeAssistant', 'fieldFileWritableCallback'),
+						'input_field_callback' => array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'fieldFileWritableCallback'),
 					);
 					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['palettes']['default'] .= 'file_writable_warning;';
 				}
@@ -180,7 +180,7 @@ class ThemeAssistant extends \Backend
 						'options' => $options,
 						'eval' => array('includeBlankOption' => true),
 						'wizard' => array(
-							array('MadeYourDay\\Contao\\ThemeAssistant', 'fieldVariationsWizard'),
+							array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'fieldVariationsWizard'),
 						),
 					);
 					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['palettes']['default'] .= '{legend_variations:hide},variations;';
@@ -223,7 +223,7 @@ class ThemeAssistant extends \Backend
 					$field = array(
 						'label'         => $label,
 						'inputType'     => 'text',
-						'load_callback' => array(array('MadeYourDay\\Contao\\ThemeAssistant', 'fieldLoadCallback')),
+						'load_callback' => array(array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'fieldLoadCallback')),
 						'value'         => $var['value'],
 					);
 
@@ -235,7 +235,7 @@ class ThemeAssistant extends \Backend
 							'decodeEntities' => true,
 							'tl_class'       => 'wizard',
 						);
-						$field['wizard'] = array(array('MadeYourDay\\Contao\\ThemeAssistant', 'colorWizardCallback'));
+						$field['wizard'] = array(array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'colorWizardCallback'));
 					}
 					elseif ($var['type'] === 'boolean') {
 						$field['inputType'] = 'checkbox';
@@ -609,7 +609,7 @@ class ThemeAssistant extends \Backend
 
 			$rendered = $this->renderTemplate($template, $data, $type);
 			if (!$rendered) {
-				$this->log('Parse error in Theme Assistant template "' . $dc->id . '"', 'MadeYourDay\Contao\ThemeAssistant::onsubmitCallback', TL_ERROR);
+				$this->log('Parse error in Theme Assistant template "' . $dc->id . '"', 'MadeYourDay\RockSolidThemeAssistant\ThemeAssistant::onsubmitCallback', TL_ERROR);
 				return $this->redirect('contao/main.php?act=error');
 			}
 			file_put_contents(TL_ROOT . '/' . substr($dc->id, 0, -5), $rendered);
@@ -881,7 +881,7 @@ class ThemeAssistant extends \Backend
 
 		}
 
-		$this->log('Unknow CSS function "' . $function . '(' . implode(', ', $params) . ')" in Theme Assistant template', 'MadeYourDay\Contao\ThemeAssistant::executeCssFunction', TL_ERROR);
+		$this->log('Unknow CSS function "' . $function . '(' . implode(', ', $params) . ')" in Theme Assistant template', 'MadeYourDay\RockSolidThemeAssistant\ThemeAssistant::executeCssFunction', TL_ERROR);
 		return '';
 	}
 

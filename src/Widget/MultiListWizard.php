@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace MadeYourDay\Contao\Widget;
+namespace MadeYourDay\RockSolidThemeAssistant\Widget;
 
 /**
  * Multi list wizard

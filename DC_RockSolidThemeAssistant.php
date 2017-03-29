@@ -12,4 +12,4 @@
  * @see MadeYourDay/Contao/ThemeAssistantDataContainer.php
  * @author Martin Auswöger <martin@madeyourday.co>
  */
-class DC_RockSolidThemeAssistant extends \MadeYourDay\Contao\ThemeAssistantDataContainer{}
+class DC_RockSolidThemeAssistant extends \MadeYourDay\RockSolidThemeAssistant\ThemeAssistantDataContainer{}

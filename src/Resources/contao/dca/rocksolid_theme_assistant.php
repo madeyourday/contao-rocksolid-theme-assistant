@@ -16,23 +16,23 @@ $GLOBALS['TL_DCA']['rocksolid_theme_assistant'] = array(
 	'config' => array(
 		'dataContainer' => 'RockSolidThemeAssistant',
 		'onload_callback' => array(
-			array('MadeYourDay\\Contao\\ThemeAssistant', 'onloadCallback'),
+			array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'onloadCallback'),
 		),
 		'onsubmit_callback' => array(
-			array('MadeYourDay\\Contao\\ThemeAssistant', 'onsubmitCallback'),
+			array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'onsubmitCallback'),
 		),
 	),
 
 	'list' => array(
 		'label' => array(
-			'label_callback' => array('MadeYourDay\\Contao\\ThemeAssistant', 'listLabelCallback'),
+			'label_callback' => array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'listLabelCallback'),
 		),
 		'operations' => array(
 			'edit' => array(
 				'label'           => &$GLOBALS['TL_LANG']['rocksolid_theme_assistant']['edit'],
 				'href'            => 'act=edit',
 				'icon'            => 'edit.gif',
-				'button_callback' => array('MadeYourDay\\Contao\\ThemeAssistant', 'editButtonCallback'),
+				'button_callback' => array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'editButtonCallback'),
 			),
 		),
 	),

@@ -14,7 +14,7 @@
 
 ClassLoader::addClasses(array(
 	'DC_RockSolidThemeAssistant'                       => 'system/modules/rocksolid-theme-assistant/src/DC_RockSolidThemeAssistant.php',
-	'MadeYourDay\\Contao\\ThemeAssistant'              => 'system/modules/rocksolid-theme-assistant/src/MadeYourDay/Contao/ThemeAssistant.php',
-	'MadeYourDay\\Contao\\ThemeAssistantDataContainer' => 'system/modules/rocksolid-theme-assistant/src/MadeYourDay/Contao/ThemeAssistantDataContainer.php',
-	'MadeYourDay\\Contao\\Widget\\MultiListWizard'     => 'system/modules/rocksolid-theme-assistant/src/MadeYourDay/Contao/Widget/MultiListWizard.php',
+	'MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant'              => 'system/modules/rocksolid-theme-assistant/src/MadeYourDay/Contao/ThemeAssistant.php',
+	'MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistantDataContainer' => 'system/modules/rocksolid-theme-assistant/src/MadeYourDay/Contao/ThemeAssistantDataContainer.php',
+	'MadeYourDay\\RockSolidThemeAssistant\\Widget\\MultiListWizard'     => 'system/modules/rocksolid-theme-assistant/src/MadeYourDay/Contao/Widget/MultiListWizard.php',
 ));
