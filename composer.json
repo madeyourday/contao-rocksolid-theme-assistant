@@ -2,23 +2,27 @@
 	"name":"madeyourday/contao-rocksolid-theme-assistant",
 	"description":"Contao Extension: Modify colors and other properties of .css.base and other .base files.",
 	"keywords":["contao","themes"],
-	"type":"contao-module",
-	"homepage":"http://rocksolidthemes.com/de/contao/plugins/theme-assistant",
+	"type":"contao-bundle",
+	"homepage":"https://rocksolidthemes.com/de/contao/plugins/theme-assistant",
 	"license":"MIT",
 	"authors":[
 		{
 			"name":"RockSolid Themes",
-			"homepage":"http://rocksolidthemes.com/de/contao-themes",
+			"homepage":"https://rocksolidthemes.com/de/contao-themes",
 			"role":"Developer"
 		}
 	],
 	"support":{
-		"forum":"http://help.rocksolidthemes.com/discussions",
+		"forum":"http://help.rocksolidthemes.com/discussions/contao",
 		"issues":"https://github.com/madeyourday/contao-rocksolid-theme-assistant/issues",
 		"source":"https://github.com/madeyourday/contao-rocksolid-theme-assistant"
 	},
 	"require":{
-		"php":">=5.3"
+		"php":">=5.5",
+		"contao/core-bundle":"^4.3"
+	},
+	"conflict": {
+		"contao/core": "*"
 	},
 	"autoload":{
 		"psr-4": {
@@ -34,11 +38,6 @@
 	"extra":{
 		"branch-alias": {
 			"dev-develop": "2.0.x-dev"
-		},
-		"contao":{
-			"sources":{
-				"":"system/modules/rocksolid-theme-assistant"
-			}
 		}
 	}
 }
