@@ -32,9 +32,7 @@
 		"psr-4": {
 			"MadeYourDay\\RockSolidThemeAssistant\\": "src/"
 		},
-		"psr-0": {
-			"DC_RockSolidThemeAssistant": ""
-		}
+		"classmap": ["DC_RockSolidThemeAssistant.php"]
 	},
 	"replace":{
 		"contao-legacy/rocksolid-theme-assistant":"self.version"
