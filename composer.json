@@ -27,6 +27,9 @@
 		"contao-legacy/rocksolid-theme-assistant":"self.version"
 	},
 	"extra":{
+		"branch-alias": {
+			"dev-develop": "2.0.x-dev"
+		},
 		"contao":{
 			"sources":{
 				"":"system/modules/rocksolid-theme-assistant"
