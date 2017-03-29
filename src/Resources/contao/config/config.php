@@ -21,10 +21,7 @@ $GLOBALS['TL_HOOKS']['executePostActions'][] = array('MadeYourDay\\RockSolidThem
 
 $GLOBALS['BE_MOD']['design']['rocksolid_theme_assistant'] = array(
 	'tables' => array('rocksolid_theme_assistant'),
-	'icon'   => (version_compare(VERSION, '4.0', '>=')
-		? 'bundles/rocksolidthemeassistant'
-		: 'system/modules/rocksolid-theme-assistant/assets'
-	) . '/images/icon.png',
+	'icon'   => 'bundles/rocksolidthemeassistant/images/icon.png',
 );
 
 $GLOBALS['BE_FFL']['mydMultiListWizard'] = 'MadeYourDay\\RockSolidThemeAssistant\\Widget\\MultiListWizard';

@@ -25,18 +25,9 @@ class ThemeAssistant extends \Backend
 
 		if ($action === 'loadFiletree') {
 
-			// Backwards compatibility for Contao 3.2
-			if (version_compare(VERSION, '3.3', '<')) {
-				$arrData['strTable'] = $dc->table;
-				$arrData['id'] = $dc->id;
-				$arrData['name'] = \Input::post('name');
-				$objWidget = new $GLOBALS['BE_FFL']['fileSelector']($arrData, $dc);
-			}
-			else {
-				$strField = \Input::post('name');
-				$strClass = $GLOBALS['BE_FFL']['fileSelector'];
-				$objWidget = new $strClass($strClass::getAttributesFromDca($GLOBALS['TL_DCA'][$dc->table]['fields'][$strField], $strField, null, $strField, $dc->table, $dc));
-			}
+			$strField = \Input::post('name');
+			$strClass = $GLOBALS['BE_FFL']['fileSelector'];
+			$objWidget = new $strClass($strClass::getAttributesFromDca($GLOBALS['TL_DCA'][$dc->table]['fields'][$strField], $strField, null, $strField, $dc->table, $dc));
 
 			// Load a particular node
 			if (\Input::post('folder', true) != '')
@@ -84,12 +75,7 @@ class ThemeAssistant extends \Backend
 				{
 					foreach ($varValue as $k=>$v)
 					{
-						if (version_compare(VERSION, '3.2', '<')) {
-							$varValue[$k] = \Dbafs::addResource($v)->id;
-						}
-						else {
-							$varValue[$k] = \Dbafs::addResource($v)->uuid;
-						}
+						$varValue[$k] = \Dbafs::addResource($v)->uuid;
 					}
 				}
 
@@ -100,25 +86,8 @@ class ThemeAssistant extends \Backend
 			$dc->activeRecord->id = $intId;
 			$dc->activeRecord->$strField = $varValue;
 
-			// Backwards compatibility for Contao 3.2
-			if (version_compare(VERSION, '3.3', '<')) {
-
-				// Build the attributes based on the "eval" array
-				$arrAttribs = $GLOBALS['TL_DCA'][$dc->table]['fields'][$strField]['eval'];
-
-				$arrAttribs['id'] = $dc->field;
-				$arrAttribs['name'] = $dc->field;
-				$arrAttribs['value'] = $varValue;
-				$arrAttribs['strTable'] = $dc->table;
-				$arrAttribs['strField'] = $strField;
-
-				$objWidget = new $GLOBALS['BE_FFL'][$strKey]($arrAttribs);
-
-			}
-			else {
-				$strClass = $GLOBALS['BE_FFL'][$strKey];
-				$objWidget = new $strClass($strClass::getAttributesFromDca($GLOBALS['TL_DCA'][$dc->table]['fields'][$strField], $strField, $varValue, $strField, $dc->table, $dc));
-			}
+			$strClass = $GLOBALS['BE_FFL'][$strKey];
+			$objWidget = new $strClass($strClass::getAttributesFromDca($GLOBALS['TL_DCA'][$dc->table]['fields'][$strField], $strField, $varValue, $strField, $dc->table, $dc));
 
 			echo $objWidget->generate();
 			exit;
@@ -250,12 +219,7 @@ class ThemeAssistant extends \Backend
 					elseif ($var['type'] === 'image') {
 						$field['value'] = \FilesModel::findByPath($GLOBALS['TL_CONFIG']['uploadPath'] . '/' . $field['value']);
 						if ($field['value']) {
-							if (version_compare(VERSION, '3.2', '<')) {
-								$field['value'] = $field['value']->id;
-							}
-							else {
-								$field['value'] = $field['value']->uuid;
-							}
+							$field['value'] = $field['value']->uuid;
 						}
 						else {
 							$field['value'] = '';
@@ -271,12 +235,7 @@ class ThemeAssistant extends \Backend
 						if (substr($field['value'], 0, 5) === 'url("' && substr($field['value'], -2) === '")') {
 							$field['value'] = \FilesModel::findByPath(static::resolveRelativePath(dirname($dc->id) . '/' . substr($field['value'], 5, -2)));
 							if ($field['value']) {
-								if (version_compare(VERSION, '3.2', '<')) {
-									$field['value'] = $field['value']->id;
-								}
-								else {
-									$field['value'] = $field['value']->uuid;
-								}
+								$field['value'] = $field['value']->uuid;
 							}
 							else {
 								$field['value'] = '';
@@ -407,16 +366,7 @@ class ThemeAssistant extends \Backend
 
 	public function fieldLoadCallback($value, \DataContainer $dc)
 	{
-		if (version_compare(VERSION, '4.0', '>=')) {
-			$route = \System::getContainer()->get('request_stack')->getCurrentRequest()->get('_route');
-		}
-		else {
-			$route = str_replace(
-				array('contao/', '.php'),
-				array('contao_backend_', ''),
-				\Environment::get('script')
-			);
-		}
+		$route = \System::getContainer()->get('request_stack')->getCurrentRequest()->get('_route');
 
 		if (
 			(
@@ -468,9 +418,7 @@ class ThemeAssistant extends \Backend
 
 	public function colorWizardCallback(\DataContainer $dc)
 	{
-		$assetsDir = version_compare(VERSION, '4.0', '>=')
-			? 'assets/colorpicker'
-			: 'assets/mootools/colorpicker/' . COLORPICKER;
+		$assetsDir = 'assets/colorpicker';
 
 		return ' '.$this->generateImage('pickcolor.gif', $GLOBALS['TL_LANG']['MSC']['colorpicker'], 'style="vertical-align:top;cursor:pointer" title="' . specialchars($GLOBALS['TL_LANG']['MSC']['colorpicker']) . '" id="moo_' . $dc->field . '"') . '
 			<script>
@@ -542,12 +490,7 @@ class ThemeAssistant extends \Backend
 					elseif ($data['templateVars'][$key]['type'] === 'image') {
 						$file = null;
 						if (trim($value)) {
-							if (version_compare(VERSION, '3.2', '<')) {
-								$file = \FilesModel::findByPk($value);
-							}
-							else {
-								$file = \FilesModel::findByUuid(\StringUtil::uuidToBin($value));
-							}
+							$file = \FilesModel::findByUuid(\StringUtil::uuidToBin($value));
 						}
 						if ($file) {
 							$value = substr($file->path, strlen($GLOBALS['TL_CONFIG']['uploadPath'])+1);
@@ -559,12 +502,7 @@ class ThemeAssistant extends \Backend
 					elseif ($data['templateVars'][$key]['type'] === 'background-image') {
 						$file = null;
 						if (trim($value)) {
-							if (version_compare(VERSION, '3.2', '<')) {
-								$file = \FilesModel::findByPk($value);
-							}
-							else {
-								$file = \FilesModel::findByUuid(\StringUtil::uuidToBin($value));
-							}
+							$file = \FilesModel::findByUuid(\StringUtil::uuidToBin($value));
 						}
 						if ($file) {
 							$value = 'url("' . static::getRelativePath(dirname($dc->id), $file->path) . '")';

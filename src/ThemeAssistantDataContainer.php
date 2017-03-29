@@ -69,12 +69,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 		foreach ($result as $row) {
 
 			$files = array();
-			if (version_compare(VERSION, '3.2', '<')) {
-				$folders = \FilesModel::findMultipleByIds(deserialize($row['folders']));
-			}
-			else {
-				$folders = \FilesModel::findMultipleByUuids(deserialize($row['folders']));
-			}
+			$folders = \FilesModel::findMultipleByUuids(deserialize($row['folders']));
 
 			if ($folders !== null) {
 				foreach ($folders->fetchEach('path') as $folder) {
@@ -114,12 +109,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 				}
 			}
 
-			if (version_compare(VERSION, '3.2', '<')) {
-				$screenshot = \FilesModel::findByPk($row['screenshot']);
-			}
-			else {
-				$screenshot = \FilesModel::findByUuid($row['screenshot']);
-			}
+			$screenshot = \FilesModel::findByUuid($row['screenshot']);
 
 			if ($screenshot) {
 				$screenshot = TL_FILES_URL . \Image::get($screenshot->path, 40, 30, 'center_top');
