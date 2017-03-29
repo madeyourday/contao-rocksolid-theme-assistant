@@ -68,7 +68,7 @@ class ThemeAssistant extends \Backend
 			// Convert the selected values
 			if ($varValue != '')
 			{
-				$varValue = trimsplit("\t", $varValue);
+				$varValue = \StringUtil::trimsplit("\t", $varValue);
 
 				// Automatically add resources to the DBAFS
 				if ($strKey == 'fileTree')
@@ -420,7 +420,7 @@ class ThemeAssistant extends \Backend
 	{
 		$assetsDir = 'assets/colorpicker';
 
-		return ' '.$this->generateImage('pickcolor.gif', $GLOBALS['TL_LANG']['MSC']['colorpicker'], 'style="vertical-align:top;cursor:pointer" title="' . specialchars($GLOBALS['TL_LANG']['MSC']['colorpicker']) . '" id="moo_' . $dc->field . '"') . '
+		return ' '.\Image::getHtml('pickcolor.gif', $GLOBALS['TL_LANG']['MSC']['colorpicker'], 'style="vertical-align:top;cursor:pointer" title="' . \StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['colorpicker']) . '" id="moo_' . $dc->field . '"') . '
 			<script>
 				window.addEvent("domready", function() {
 					new MooRainbow("moo_' . $dc->field . '", {
@@ -577,8 +577,8 @@ class ThemeAssistant extends \Backend
 	public function editButtonCallback($arrRow, $href, $label, $title, $icon, $attributes, $strTable, $arrRootIds, $arrChildRecordIds, $blnCircularReference, $strPrevious, $strNext)
 	{
 		if(substr($arrRow['id'], -5) === '.base'){
-			return '<a href="' . $this->addToUrl($href . '&amp;id=' . $arrRow['id']) . '" title="' . specialchars($title) . '"' . $attributes . '>'
-			     . $this->generateImage($icon, $label)
+			return '<a href="' . $this->addToUrl($href . '&amp;id=' . $arrRow['id']) . '" title="' . \StringUtil::specialchars($title) . '"' . $attributes . '>'
+			     . \Image::getHtml($icon, $label)
 			     . '</a> ';
 		}
 

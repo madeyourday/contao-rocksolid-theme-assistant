@@ -25,7 +25,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 		// Check the request token (see #4007)
 		if (isset($_GET['act'])) {
 			if (!isset($_GET['rt']) || !\RequestToken::validate(\Input::get('rt'))) {
-				$this->Session->set('INVALID_TOKEN_URL', \Environment::get('request'));
+				\System::getContainer()->get('session')->getBag('contao_backend')->set('INVALID_TOKEN_URL', \Environment::get('request'));
 				$this->redirect('contao/confirm.php');
 			}
 		}
@@ -205,7 +205,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 
 		// Build an array from boxes and rows
 		$this->strPalette = $this->getPalette();
-		$boxes = trimsplit(';', $this->strPalette);
+		$boxes = \StringUtil::trimsplit(';', $this->strPalette);
 		$legends = array();
 
 		if (!empty($boxes)) {
@@ -213,7 +213,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 			foreach ($boxes as $k => $v) {
 
 				$eCount = 1;
-				$boxes[$k] = trimsplit(',', $v);
+				$boxes[$k] = \StringUtil::trimsplit(',', $v);
 
 				foreach ($boxes[$k] as $kk=>$vv) {
 
@@ -240,7 +240,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 			}
 
 			$class = 'tl_tbox';
-			$fs = $this->Session->get('fieldset_states');
+			$fs = \System::getContainer()->get('session')->getBag('contao_backend')->get('fieldset_states');
 			$blnIsFirst = true;
 
 			// Render boxes
@@ -271,7 +271,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 
 					if ($vv == '[EOF]') {
 						if ($blnAjax && \Environment::get('isAjaxRequest')) {
-							return $strAjax . '<input type="hidden" name="FORM_FIELDS[]" value="'.specialchars($this->strPalette).'">';
+							return $strAjax . '<input type="hidden" name="FORM_FIELDS[]" value="'.\StringUtil::specialchars($this->strPalette).'">';
 						}
 						$blnAjax = false;
 						$return .= "\n" . '</div>';
@@ -297,7 +297,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 
 					// Convert CSV fields (see #2890)
 					if ($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['multiple'] && isset($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['csv'])) {
-						$this->varValue = trimsplit($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['csv'], $this->varValue);
+						$this->varValue = \StringUtil::trimsplit($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['csv'], $this->varValue);
 					}
 
 					// Call load_callback
@@ -329,8 +329,8 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 		$return .= '</div>'
 		         . '<div class="tl_formbody_submit">'
 		         . '<div class="tl_submit_container">'
-		         . '<input type="submit" name="save" id="save" class="tl_submit" accesskey="s" value="'.specialchars($GLOBALS['TL_LANG']['MSC']['save']).'">'
-		         . '<input type="submit" name="saveNclose" id="saveNclose" class="tl_submit" accesskey="c" value="'.specialchars($GLOBALS['TL_LANG']['MSC']['saveNclose']).'">'
+		         . '<input type="submit" name="save" id="save" class="tl_submit" accesskey="s" value="'.\StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['save']).'">'
+		         . '<input type="submit" name="saveNclose" id="saveNclose" class="tl_submit" accesskey="c" value="'.\StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['saveNclose']).'">'
 		         . '</div>'
 		         . '</div>'
 		         . '</form>'
@@ -343,15 +343,15 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 		// Begin the form (-> DO NOT CHANGE THIS ORDER -> this way the onsubmit attribute of the form can be changed by a field)
 		$return = $version
 		        . '<div id="tl_buttons">'
-		        . '<a href="'.$this->getReferer(true).'" class="header_back" title="'.specialchars($GLOBALS['TL_LANG']['MSC']['backBTTitle']).'" accesskey="b" onclick="Backend.getScrollOffset()">'.$GLOBALS['TL_LANG']['MSC']['backBT'].'</a>'
+		        . '<a href="'.$this->getReferer(true).'" class="header_back" title="'.\StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['backBTTitle']).'" accesskey="b" onclick="Backend.getScrollOffset()">'.$GLOBALS['TL_LANG']['MSC']['backBT'].'</a>'
 		        . '</div>'
 		        . '<h2 class="sub_headline">'.sprintf($GLOBALS['TL_LANG']['MSC']['editRecord'], ($this->intId ? $this->intId : '')).'</h2>'
 		        . \Message::generate()
 		        . '<form action="'.ampersand(\Environment::get('request'), true).'" id="'.$this->strTable.'" class="tl_form" method="post" enctype="' . ($this->blnUploadable ? 'multipart/form-data' : 'application/x-www-form-urlencoded') . '"'.(!empty($this->onsubmit) ? ' onsubmit="'.implode(' ', $this->onsubmit).'"' : '').'>'
 		        . '<div class="tl_formbody_edit">'
-		        . '<input type="hidden" name="FORM_SUBMIT" value="'.specialchars($this->strTable).'">'
+		        . '<input type="hidden" name="FORM_SUBMIT" value="'.\StringUtil::specialchars($this->strTable).'">'
 		        . '<input type="hidden" name="REQUEST_TOKEN" value="'.REQUEST_TOKEN.'">'
-		        . '<input type="hidden" name="FORM_FIELDS[]" value="'.specialchars($this->strPalette).'">'
+		        . '<input type="hidden" name="FORM_FIELDS[]" value="'.\StringUtil::specialchars($this->strPalette).'">'
 		        . ($this->noReload ? '<p class="tl_error">' . $GLOBALS['TL_LANG']['ERR']['general'] . '</p>' : '')
 		        . $return;
 
