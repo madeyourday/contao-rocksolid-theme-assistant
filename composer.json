@@ -38,9 +38,6 @@
 		"contao-legacy/rocksolid-theme-assistant":"self.version"
 	},
 	"extra":{
-		"branch-alias": {
-			"dev-develop": "2.0.x-dev"
-		},
 		"contao-manager-plugin": "MadeYourDay\\RockSolidThemeAssistant\\ContaoManagerPlugin"
 	}
 }
