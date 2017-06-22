@@ -362,6 +362,18 @@ class ThemeAssistant extends \Backend
 			}
 
 		}
+		elseif (substr(\Input::get('target'), 0, 26) === 'rocksolid_theme_assistant.') {
+			$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields'][
+				explode('.', \Input::get('target'), 3)[1]
+			] = [
+				'inputType' => 'fileTree',
+				'eval' => [
+					'fieldType' => 'radio',
+					'filesOnly' => true,
+					'extensions' => 'jpg,jpeg,png,gif,svg',
+				],
+			];
+		}
 	}
 
 	public function fieldLoadCallback($value, \DataContainer $dc)
