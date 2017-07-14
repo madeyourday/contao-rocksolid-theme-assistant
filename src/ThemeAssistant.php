@@ -376,6 +376,34 @@ class ThemeAssistant extends \Backend
 		}
 	}
 
+	/**
+	 * loadDataContainer hook
+	 *
+	 * Creates fields if loaded in a picker context
+	 *
+	 * @param  string $table
+	 * @return void
+	 */
+	public function loadDataContainerHook($table)
+	{
+		if ($table !== 'rocksolid_theme_assistant') {
+			return;
+		}
+
+		if (substr(\Input::get('target'), 0, 26) === 'rocksolid_theme_assistant.') {
+			$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields'][
+				explode('.', \Input::get('target'), 3)[1]
+			] = [
+				'inputType' => 'fileTree',
+				'eval' => [
+					'fieldType' => 'radio',
+					'filesOnly' => true,
+					'extensions' => 'jpg,jpeg,png,gif,svg',
+				],
+			];
+		}
+	}
+
 	public function fieldLoadCallback($value, \DataContainer $dc)
 	{
 		$route = \System::getContainer()->get('request_stack')->getCurrentRequest()->get('_route');

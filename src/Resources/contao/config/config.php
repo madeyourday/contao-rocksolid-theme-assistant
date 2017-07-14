@@ -12,6 +12,7 @@
  * @author Martin Auswöger <martin@madeyourday.co>
  */
 
+$GLOBALS['TL_HOOKS']['loadDataContainer'][] = array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'loadDataContainerHook');
 $GLOBALS['TL_HOOKS']['executePostActions'][] = array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'executePostActionsHook');
 
 $GLOBALS['BE_MOD']['design']['rocksolid_theme_assistant'] = array(
