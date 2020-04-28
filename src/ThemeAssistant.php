@@ -62,7 +62,7 @@ class ThemeAssistant extends \Backend
 				die('Bad Request');
 			}
 
-			$varValue = \Input::post('value', true);
+			$varValue = rawurldecode(\Input::post('value', true));
 			$strKey = ($action == 'reloadPagetree') ? 'pageTree' : 'fileTree';
 
 			// Convert the selected values
