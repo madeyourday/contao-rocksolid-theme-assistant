@@ -86,7 +86,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 						$files[] = array(
 							'id'   => $file,
 							'type' => $extension === 'html5' ? 'html' : $extension,
-							'name' => substr($file, strlen($folder)+1, -5),
+							'name' => substr($file, strlen($GLOBALS['TL_CONFIG']['uploadPath'])+1, -5),
 						);
 					}
 				}
@@ -123,6 +123,44 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 				);
 			}
 
+		}
+
+		$files = array();
+		$allCssFiles = array_merge(
+			glob(TL_ROOT . '/' . $GLOBALS['TL_CONFIG']['uploadPath'] . '/*.css.base') ?: array(),
+			glob(TL_ROOT . '/' . $GLOBALS['TL_CONFIG']['uploadPath'] . '/*/*.css.base') ?: array(),
+			glob(TL_ROOT . '/' . $GLOBALS['TL_CONFIG']['uploadPath'] . '/*/*/*.css.base') ?: array(),
+			glob(TL_ROOT . '/' . $GLOBALS['TL_CONFIG']['uploadPath'] . '/*/*/*/*.css.base') ?: array(),
+			glob(TL_ROOT . '/' . $GLOBALS['TL_CONFIG']['uploadPath'] . '/*/*/*/*/*.css.base') ?: array(),
+			glob(TL_ROOT . '/' . $GLOBALS['TL_CONFIG']['uploadPath'] . '/*/*/*/*/*/*.css.base') ?: array(),
+			glob(TL_ROOT . '/' . $GLOBALS['TL_CONFIG']['uploadPath'] . '/*/*/*/*/*/*/*.css.base') ?: array()
+		);
+
+		foreach ($allCssFiles as $baseFile) {
+			if(!file_exists(substr($baseFile, 0, -5))){
+				continue;
+			}
+			$baseFileId = substr($baseFile, strlen(TL_ROOT)+1);
+			foreach ($themeList as $theme) {
+				foreach ($theme['files'] as $file) {
+					if ($file['id'] === $baseFileId) {
+						continue 3;
+					}
+				}
+			}
+			$files[] = array(
+				'id'   => $baseFileId,
+				'type' => 'css',
+				'name' => substr($baseFileId, strlen($GLOBALS['TL_CONFIG']['uploadPath'])+1, -5),
+			);
+		}
+
+		if (count($files)) {
+			$themeList[] = array(
+				'name' => $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['unknown_theme'],
+				'files' => $files,
+				'screenshot' => null,
+			);
 		}
 
 		if (!count($themeList)) {

@@ -33,3 +33,4 @@ $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['legend_source']       = 'Quell
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['editor_info']         = 'Falls der Editor nicht korrekt angezeigt wird, laden Sie die Seite bitte neu.';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['source'][0]           = 'Quelltext';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['source'][1]           = 'Hier können Sie den Quelltext direkt bearbeiten';
+$GLOBALS['TL_LANG']['rocksolid_theme_assistant']['unknown_theme']       = 'Keinem Theme zugeordnet';

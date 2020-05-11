@@ -33,3 +33,4 @@ $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['legend_source']       = 'Edit 
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['editor_info']         = 'If the editor doesn\'t appear correctly, reload the page.';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['source'][0]           = 'Source code';
 $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['source'][1]           = 'Here you can edit the source code directly.';
+$GLOBALS['TL_LANG']['rocksolid_theme_assistant']['unknown_theme']       = 'Not associated with a theme';
