@@ -468,7 +468,14 @@ class ThemeAssistant extends \Backend
 						startColor:((cl = $("ctrl_' . $dc->field . '").value.hexToRgb(true)) ? cl : [255, 0, 0]),
 						imgPath:"' . $assetsDir . '/images/",
 						onComplete: function(color){
-							$("ctrl_' . $dc->field . '").value = color.hex.replace("#", "");
+							var input = $("ctrl_' . $dc->field . '"); 
+							input.value = color.hex.replace("#", "");
+							var evt = document.createEvent("HTMLEvents");
+							evt.initEvent("input", true, true);
+							input.dispatchEvent(evt);
+							evt = document.createEvent("HTMLEvents");
+							evt.initEvent("change", true, true);
+							input.dispatchEvent(evt);
 						}
 					});
 				});
