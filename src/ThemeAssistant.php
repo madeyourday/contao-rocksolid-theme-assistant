@@ -783,7 +783,7 @@ class ThemeAssistant extends \Backend
 
 			$color1 = substr(trim($params[0]), 1);
 			$color2 = substr(trim($params[1]), 1);
-			$weight = isset($params[2]) ? $params[2]/100 : 0.5;
+			$weight = isset($params[2]) ? floatval($params[2]) / 100 : 0.5;
 
 			return strtolower('#'
 				.sprintf("%02X",(int)((hexdec(substr($color1, 0, 2))*$weight) + (hexdec(substr($color2, 0, 2))*(1-$weight)))) // red
@@ -795,7 +795,7 @@ class ThemeAssistant extends \Backend
 		if ($function === 'lighten' || $function === 'darken') {
 
 			$color = substr($params[0], 1);
-			$weight = $params[1]/100;
+			$weight = floatval($params[1]) / 100;
 			$color = static::colorRgbToHsl(array(hexdec(substr($color, 0, 2)), hexdec(substr($color, 2, 2)), hexdec(substr($color, 4, 2))));
 			$color[2] += $weight * ($function === 'lighten' ? 1 : -1);
 			$color[2] = max(0, min(1, $color[2]));
@@ -807,7 +807,7 @@ class ThemeAssistant extends \Backend
 		if ($function === 'saturate' || $function === 'desaturate') {
 
 			$color = substr($params[0], 1);
-			$weight = $params[1]/100;
+			$weight = floatval($params[1]) / 100;
 			$color = static::colorRgbToHsl(array(hexdec(substr($color, 0, 2)), hexdec(substr($color, 2, 2)), hexdec(substr($color, 4, 2))));
 			$color[1] += $weight * ($function === 'saturate' ? 1 : -1);
 			$color[1] = max(0, min(1, $color[1]));
@@ -819,7 +819,7 @@ class ThemeAssistant extends \Backend
 		if ($function === 'adjust-hue') {
 
 			$color = substr($params[0], 1);
-			$degrees = $params[1] / 360;
+			$degrees = floatval($params[1]) / 360;
 			$color = static::colorRgbToHsl(array(hexdec(substr($color, 0, 2)), hexdec(substr($color, 2, 2)), hexdec(substr($color, 4, 2))));
 			$color[0] += $degrees;
 			while ($color[0] < 0) {

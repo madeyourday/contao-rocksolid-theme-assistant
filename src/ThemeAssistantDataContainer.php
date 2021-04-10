@@ -169,7 +169,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 
 		$return .= '<div id="tl_buttons">' . $this->generateGlobalButtons() . '</div>' . \Message::generate(true);
 		$return .= '<div class="tl_listing_container list_view">';
-		$return .= '<table class="tl_listing' . ($GLOBALS['TL_DCA'][$this->strTable]['list']['label']['showColumns'] ? ' showColumns' : '') . '">';
+		$return .= '<table class="tl_listing' . (!empty($GLOBALS['TL_DCA'][$this->strTable]['list']['label']['showColumns']) ? ' showColumns' : '') . '">';
 
 		foreach ($themeList as $key => $theme) {
 
@@ -264,7 +264,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 						$legends[$k] = substr($vv, 1, -1);
 						unset($boxes[$k][$kk]);
 					}
-					elseif ($GLOBALS['TL_DCA'][$this->strTable]['fields'][$vv]['exclude'] || !is_array($GLOBALS['TL_DCA'][$this->strTable]['fields'][$vv])) {
+					elseif (!empty($GLOBALS['TL_DCA'][$this->strTable]['fields'][$vv]['exclude']) || !\is_array($GLOBALS['TL_DCA'][$this->strTable]['fields'][$vv])) {
 						unset($boxes[$k][$kk]);
 					}
 
@@ -328,18 +328,18 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 					$this->varValue = '';
 
 					// Autofocus the first field
-					if ($blnIsFirst && $GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['inputType'] == 'text') {
+					if ($blnIsFirst && isset($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['inputType']) && $GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['inputType'] == 'text') {
 						$GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['autofocus'] = 'autofocus';
 						$blnIsFirst = false;
 					}
 
 					// Convert CSV fields (see #2890)
-					if ($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['multiple'] && isset($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['csv'])) {
+                    if (!empty($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['multiple']) && isset($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['csv'])) {
 						$this->varValue = \StringUtil::trimsplit($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['csv'], $this->varValue);
 					}
 
 					// Call load_callback
-					if (is_array($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['load_callback'])) {
+					if (isset($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['load_callback']) && \is_array($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['load_callback'])) {
 						foreach ($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['load_callback'] as $callback) {
 							if (is_array($callback)) {
 								$this->import($callback[0]);
@@ -379,8 +379,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 		         . '</script>';
 
 		// Begin the form (-> DO NOT CHANGE THIS ORDER -> this way the onsubmit attribute of the form can be changed by a field)
-		$return = $version
-		        . '<div id="tl_buttons">'
+		$return = '<div id="tl_buttons">'
 		        . '<a href="'.$this->getReferer(true).'" class="header_back" title="'.\StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['backBTTitle']).'" accesskey="b" onclick="Backend.getScrollOffset()">'.$GLOBALS['TL_LANG']['MSC']['backBT'].'</a>'
 		        . '</div>'
 		        . '<h2 class="sub_headline">'.sprintf($GLOBALS['TL_LANG']['MSC']['editRecord'], ($this->intId ? $this->intId : '')).'</h2>'
