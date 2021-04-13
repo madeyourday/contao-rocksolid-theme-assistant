@@ -42,7 +42,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 		$this->arrModule = $arrModule;
 
 		// Call onload_callback (e.g. to check permissions)
-		if (is_array($GLOBALS['TL_DCA'][$this->strTable]['config']['onload_callback'])) {
+		if (is_array($GLOBALS['TL_DCA'][$this->strTable]['config']['onload_callback'] ?? null)) {
 			foreach ($GLOBALS['TL_DCA'][$this->strTable]['config']['onload_callback'] as $callback) {
 				if (is_array($callback)) {
 					$this->import($callback[0]);
@@ -328,18 +328,18 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 					$this->varValue = '';
 
 					// Autofocus the first field
-					if ($blnIsFirst && isset($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['inputType']) && $GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['inputType'] == 'text') {
+					if ($blnIsFirst && ($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['inputType'] ?? null) == 'text') {
 						$GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['autofocus'] = 'autofocus';
 						$blnIsFirst = false;
 					}
 
 					// Convert CSV fields (see #2890)
-                    if (!empty($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['multiple']) && isset($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['csv'])) {
+					if (!empty($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['multiple']) && isset($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['csv'])) {
 						$this->varValue = \StringUtil::trimsplit($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['csv'], $this->varValue);
 					}
 
 					// Call load_callback
-					if (isset($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['load_callback']) && \is_array($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['load_callback'])) {
+					if (\is_array($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['load_callback'] ?? null)) {
 						foreach ($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['load_callback'] as $callback) {
 							if (is_array($callback)) {
 								$this->import($callback[0]);
@@ -396,7 +396,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 		if (\Input::post('FORM_SUBMIT') == $this->strTable && !$this->noReload) {
 
 			// Trigger the onsubmit_callback
-			if (is_array($GLOBALS['TL_DCA'][$this->strTable]['config']['onsubmit_callback'])) {
+			if (is_array($GLOBALS['TL_DCA'][$this->strTable]['config']['onsubmit_callback'] ?? null)) {
 				foreach ($GLOBALS['TL_DCA'][$this->strTable]['config']['onsubmit_callback'] as $callback) {
 					$this->import($callback[0]);
 					$this->{$callback[0]}->{$callback[1]}($this);
