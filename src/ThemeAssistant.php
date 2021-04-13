@@ -677,9 +677,14 @@ class ThemeAssistant extends \Backend
 
 		extract($data);
 		ob_start();
-		eval('?>' . $_phpCode . '<?php ');
 
-		return ob_get_clean() ?: '';
+		try {
+			eval('?>' . $_phpCode . '<?php ');
+			return ob_get_contents() ?: '';
+		}
+		finally {
+			ob_end_clean();
+		}
 	}
 
 	protected function renderCssTemplate($template, $data)
