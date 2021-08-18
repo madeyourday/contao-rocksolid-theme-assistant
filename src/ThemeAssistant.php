@@ -521,7 +521,7 @@ class ThemeAssistant extends \Backend
 						continue;
 					}
 
-					$value = \Input::post($key);
+					$value = \Input::post($key, true);
 
 					if ($data['templateVars'][$key]['type'] === 'color') {
 						if (strlen($value) === 6) {
