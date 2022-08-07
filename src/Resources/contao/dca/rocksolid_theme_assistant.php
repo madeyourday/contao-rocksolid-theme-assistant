@@ -11,10 +11,13 @@
  *
  * @author Martin Auswöger <martin@madeyourday.co>
  */
+
+use MadeYourDay\RockSolidThemeAssistant\ThemeAssistantDataContainer;
+
 $GLOBALS['TL_DCA']['rocksolid_theme_assistant'] = array(
 
 	'config' => array(
-		'dataContainer' => 'RockSolidThemeAssistant',
+		'dataContainer' => ThemeAssistantDataContainer::class,
 		'onload_callback' => array(
 			array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'onloadCallback'),
 		),

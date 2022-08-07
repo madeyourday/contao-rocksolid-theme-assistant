@@ -11,12 +11,26 @@
 
 namespace MadeYourDay\RockSolidThemeAssistant;
 
+use Contao\BackendUser;
+use Contao\DataContainer;
+use Contao\EditableDataContainerInterface;
+use Contao\Environment;
+use Contao\File;
+use Contao\FilesModel;
+use Contao\Image;
+use Contao\Input;
+use Contao\ListableDataContainerInterface;
+use Contao\Message;
+use Contao\StringUtil;
+use Contao\System;
+use Symfony\Component\Security\Csrf\CsrfToken;
+
 /**
  * RockSolid Theme Assistant DataContainer
  *
  * @author Martin Auswöger <martin@madeyourday.co>
  */
-class ThemeAssistantDataContainer extends \DataContainer implements \listable, \editable
+class ThemeAssistantDataContainer extends DataContainer implements ListableDataContainerInterface, EditableDataContainerInterface
 {
 	public function __construct($strTable, $arrModule = array())
 	{
@@ -24,17 +38,16 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 
 		// Check the request token (see #4007)
 		if (isset($_GET['act'])) {
-			if (!isset($_GET['rt']) || !\RequestToken::validate(\Input::get('rt'))) {
-				\System::getContainer()->get('session')->getBag('contao_backend')->set('INVALID_TOKEN_URL', \Environment::get('request'));
-				$this->redirect('contao/confirm.php');
+			if (Input::get('rt') === null || !System::getContainer()->get('contao.csrf.token_manager')->isTokenValid(new CsrfToken(System::getContainer()->getParameter('contao.csrf_token_name'), Input::get('rt')))) {
+				System::getContainer()->get('session')->getBag('contao_backend')->set('INVALID_TOKEN_URL', Environment::get('request'));
+				$this->redirect('contao/confirm');
 			}
 		}
 
-		$this->intId = \Input::get('id');
+		$this->intId = Input::get('id');
 
 		// Check whether the table is defined
 		if (!$strTable || !isset($GLOBALS['TL_DCA'][$strTable])) {
-			$this->log('Could not load the data container configuration for "' . $strTable . '"', 'DC_Table __construct()', TL_ERROR);
 			trigger_error('Could not load the data container configuration', E_USER_ERROR);
 		}
 
@@ -64,21 +77,21 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 
 		$result = $objRow->fetchAllAssoc();
 
-		$this->import('FilesModel');
+		$this->import(FilesModel::class, 'FilesModel');
 
 		foreach ($result as $row) {
 
 			$files = array();
-			$folders = \FilesModel::findMultipleByUuids(deserialize($row['folders']));
+			$folders = FilesModel::findMultipleByUuids(StringUtil::deserialize($row['folders']));
 
 			if ($folders !== null) {
 				foreach ($folders->fetchEach('path') as $folder) {
-					$filesResult = \FilesModel::findBy(array($this->FilesModel->getTable().'.path LIKE ? AND extension = \'base\''), $folder.'/%');
+					$filesResult = FilesModel::findBy(array($this->FilesModel->getTable().'.path LIKE ? AND extension = \'base\''), $folder.'/%');
 					if($filesResult === null){
 						continue;
 					}
 					foreach ($filesResult->fetchEach('path') as $file) {
-						if(!file_exists(TL_ROOT.'/'.substr($file, 0, -5))){
+						if(!file_exists(System::getContainer()->getParameter('kernel.project_dir').'/'.substr($file, 0, -5))){
 							continue;
 						}
 						$extension = explode('.', $file);
@@ -86,18 +99,18 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 						$files[] = array(
 							'id'   => $file,
 							'type' => $extension === 'html5' ? 'html' : $extension,
-							'name' => substr($file, strlen($GLOBALS['TL_CONFIG']['uploadPath'])+1, -5),
+							'name' => substr($file, strlen(System::getContainer()->getParameter('contao.upload_path'))+1, -5),
 						);
 					}
 				}
 			}
 
-			$templateFiles = scandir(TL_ROOT . '/' . $row['templates']);
+			$templateFiles = scandir(System::getContainer()->getParameter('kernel.project_dir') . '/' . $row['templates']);
 
 			foreach ($templateFiles as $file) {
 				if (
 					substr($file, -5) === '.base' &&
-					file_exists(TL_ROOT . '/' . $row['templates'] . '/' . substr($file, 0, -5))
+					file_exists(System::getContainer()->getParameter('kernel.project_dir') . '/' . $row['templates'] . '/' . substr($file, 0, -5))
 				) {
 					$extension = explode('.', $file);
 					$extension = $extension[count($extension)-2];
@@ -109,10 +122,11 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 				}
 			}
 
-			$screenshot = \FilesModel::findByUuid($row['screenshot']);
+			$screenshot = FilesModel::findByUuid($row['screenshot']);
 
 			if ($screenshot) {
-				$screenshot = TL_FILES_URL . \Image::get($screenshot->path, 40, 30, 'center_top');
+				$projectDir = System::getContainer()->getParameter('kernel.project_dir');
+				$screenshot = TL_FILES_URL . System::getContainer()->get('contao.image.factory')->create($projectDir . '/' . $screenshot->path, array(80, 60, 'center_top'))->getUrl($projectDir);
 			}
 
 			if (count($files)) {
@@ -127,20 +141,20 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 
 		$files = array();
 		$allCssFiles = array_merge(
-			glob(TL_ROOT . '/' . $GLOBALS['TL_CONFIG']['uploadPath'] . '/*.css.base') ?: array(),
-			glob(TL_ROOT . '/' . $GLOBALS['TL_CONFIG']['uploadPath'] . '/*/*.css.base') ?: array(),
-			glob(TL_ROOT . '/' . $GLOBALS['TL_CONFIG']['uploadPath'] . '/*/*/*.css.base') ?: array(),
-			glob(TL_ROOT . '/' . $GLOBALS['TL_CONFIG']['uploadPath'] . '/*/*/*/*.css.base') ?: array(),
-			glob(TL_ROOT . '/' . $GLOBALS['TL_CONFIG']['uploadPath'] . '/*/*/*/*/*.css.base') ?: array(),
-			glob(TL_ROOT . '/' . $GLOBALS['TL_CONFIG']['uploadPath'] . '/*/*/*/*/*/*.css.base') ?: array(),
-			glob(TL_ROOT . '/' . $GLOBALS['TL_CONFIG']['uploadPath'] . '/*/*/*/*/*/*/*.css.base') ?: array()
+			glob(System::getContainer()->getParameter('kernel.project_dir') . '/' . System::getContainer()->getParameter('contao.upload_path') . '/*.css.base') ?: array(),
+			glob(System::getContainer()->getParameter('kernel.project_dir') . '/' . System::getContainer()->getParameter('contao.upload_path') . '/*/*.css.base') ?: array(),
+			glob(System::getContainer()->getParameter('kernel.project_dir') . '/' . System::getContainer()->getParameter('contao.upload_path') . '/*/*/*.css.base') ?: array(),
+			glob(System::getContainer()->getParameter('kernel.project_dir') . '/' . System::getContainer()->getParameter('contao.upload_path') . '/*/*/*/*.css.base') ?: array(),
+			glob(System::getContainer()->getParameter('kernel.project_dir') . '/' . System::getContainer()->getParameter('contao.upload_path') . '/*/*/*/*/*.css.base') ?: array(),
+			glob(System::getContainer()->getParameter('kernel.project_dir') . '/' . System::getContainer()->getParameter('contao.upload_path') . '/*/*/*/*/*/*.css.base') ?: array(),
+			glob(System::getContainer()->getParameter('kernel.project_dir') . '/' . System::getContainer()->getParameter('contao.upload_path') . '/*/*/*/*/*/*/*.css.base') ?: array()
 		);
 
 		foreach ($allCssFiles as $baseFile) {
 			if(!file_exists(substr($baseFile, 0, -5))){
 				continue;
 			}
-			$baseFileId = substr($baseFile, strlen(TL_ROOT)+1);
+			$baseFileId = substr($baseFile, strlen(System::getContainer()->getParameter('kernel.project_dir'))+1);
 			foreach ($themeList as $theme) {
 				foreach ($theme['files'] as $file) {
 					if ($file['id'] === $baseFileId) {
@@ -151,7 +165,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 			$files[] = array(
 				'id'   => $baseFileId,
 				'type' => 'css',
-				'name' => substr($baseFileId, strlen($GLOBALS['TL_CONFIG']['uploadPath'])+1, -5),
+				'name' => substr($baseFileId, strlen(System::getContainer()->getParameter('contao.upload_path'))+1, -5),
 			);
 		}
 
@@ -167,7 +181,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 			return '<p class="tl_empty">' . $GLOBALS['TL_LANG']['MSC']['noResult'] . '</p>';
 		}
 
-		$return .= '<div id="tl_buttons">' . $this->generateGlobalButtons() . '</div>' . \Message::generate(true);
+		$return .= '<div id="tl_buttons">' . $this->generateGlobalButtons() . '</div>' . Message::generate(true);
 		$return .= '<div class="tl_listing_container list_view">';
 		$return .= '<table class="tl_listing' . (!empty($GLOBALS['TL_DCA'][$this->strTable]['list']['label']['showColumns']) ? ' showColumns' : '') . '">';
 
@@ -179,7 +193,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 
 			$return .= '<tr><td colspan="2" class="tl_folder_tlist">';
 			if ($theme['screenshot']) {
-				$return .= '<img src="'.$theme['screenshot'].'" alt="" class="theme_preview"> ';
+				$return .= '<img src="'.$theme['screenshot'].'" height="30" alt="" class="theme_preview"> ';
 			}
 			$return .= $theme['name'].'</td></tr>';
 
@@ -212,28 +226,24 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 	{
 		$this->isValid($this->intId);
 
-		if (is_dir(TL_ROOT . '/' . $this->intId)) {
-			$this->log('Folder "' . $this->intId . '" cannot be edited', 'DC_RockSolidThemeAssistant edit()', TL_ERROR);
-			$this->redirect('contao/main.php?act=error');
+		if (is_dir(System::getContainer()->getParameter('kernel.project_dir') . '/' . $this->intId)) {
+			$this->redirect('contao?act=error');
 		}
-		elseif (!file_exists(TL_ROOT . '/' . $this->intId)) {
-			$this->log('File "' . $this->intId . '" does not exist', 'DC_RockSolidThemeAssistant edit()', TL_ERROR);
-			$this->redirect('contao/main.php?act=error');
+		elseif (!file_exists(System::getContainer()->getParameter('kernel.project_dir') . '/' . $this->intId)) {
+			$this->redirect('contao?act=error');
 		}
 		elseif (substr($this->intId, -5) !== '.base') {
-			$this->log('File "' . $this->intId . '" cannot be edited', 'DC_RockSolidThemeAssistant edit()', TL_ERROR);
-			$this->redirect('contao/main.php?act=error');
+			$this->redirect('contao?act=error');
 		}
 
-		$this->import('BackendUser', 'User');
+		$this->import(BackendUser::class, 'User');
 
 		// Check user permission
 		if (!$this->User->isAdmin && !$this->User->hasAccess('f2', 'fop')) {
-			$this->log('Not enough permissions to edit the file "' . $this->intId . '"', 'DC_RockSolidThemeAssistant edit()', TL_ERROR);
-			$this->redirect('contao/main.php?act=error');
+			$this->redirect('contao?act=error');
 		}
 
-		$objFile = new \File($this->intId);
+		$objFile = new File($this->intId);
 
 		$this->objActiveRecord = new \stdClass;
 		$this->objActiveRecord->intId = $this->intId;
@@ -243,7 +253,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 
 		// Build an array from boxes and rows
 		$this->strPalette = $this->getPalette();
-		$boxes = \StringUtil::trimsplit(';', $this->strPalette);
+		$boxes = StringUtil::trimsplit(';', $this->strPalette);
 		$legends = array();
 
 		if (!empty($boxes)) {
@@ -251,7 +261,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 			foreach ($boxes as $k => $v) {
 
 				$eCount = 1;
-				$boxes[$k] = \StringUtil::trimsplit(',', $v);
+				$boxes[$k] = StringUtil::trimsplit(',', $v);
 
 				foreach ($boxes[$k] as $kk=>$vv) {
 
@@ -278,7 +288,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 			}
 
 			$class = 'tl_tbox';
-			$fs = \System::getContainer()->get('session')->getBag('contao_backend')->get('fieldset_states');
+			$fs = System::getContainer()->get('session')->getBag('contao_backend')->get('fieldset_states');
 			$blnIsFirst = true;
 
 			// Render boxes
@@ -308,8 +318,8 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 				foreach ($v as $vv) {
 
 					if ($vv == '[EOF]') {
-						if ($blnAjax && \Environment::get('isAjaxRequest')) {
-							return $strAjax . '<input type="hidden" name="FORM_FIELDS[]" value="'.\StringUtil::specialchars($this->strPalette).'">';
+						if ($blnAjax && Environment::get('isAjaxRequest')) {
+							return $strAjax . '<input type="hidden" name="FORM_FIELDS[]" value="'.StringUtil::specialchars($this->strPalette).'">';
 						}
 						$blnAjax = false;
 						$return .= "\n" . '</div>';
@@ -318,7 +328,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 
 					if (preg_match('/^\[.*\]$/', $vv)) {
 						$thisId = 'sub_' . substr($vv, 1, -1);
-						$blnAjax = ($ajaxId == $thisId && \Environment::get('isAjaxRequest')) ? true : false;
+						$blnAjax = ($ajaxId == $thisId && Environment::get('isAjaxRequest')) ? true : false;
 						$return .= "\n" . '<div id="'.$thisId.'">';
 						continue;
 					}
@@ -335,7 +345,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 
 					// Convert CSV fields (see #2890)
 					if (!empty($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['multiple']) && isset($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['csv'])) {
-						$this->varValue = \StringUtil::trimsplit($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['csv'], $this->varValue);
+						$this->varValue = StringUtil::trimsplit($GLOBALS['TL_DCA'][$this->strTable]['fields'][$this->strField]['eval']['csv'], $this->varValue);
 					}
 
 					// Call load_callback
@@ -367,8 +377,8 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 		$return .= '</div>'
 		         . '<div class="tl_formbody_submit">'
 		         . '<div class="tl_submit_container">'
-		         . '<input type="submit" name="save" id="save" class="tl_submit" accesskey="s" value="'.\StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['save']).'">'
-		         . '<input type="submit" name="saveNclose" id="saveNclose" class="tl_submit" accesskey="c" value="'.\StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['saveNclose']).'">'
+		         . '<input type="submit" name="save" id="save" class="tl_submit" accesskey="s" value="'.StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['save']).'">'
+		         . '<input type="submit" name="saveNclose" id="saveNclose" class="tl_submit" accesskey="c" value="'.StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['saveNclose']).'">'
 		         . '</div>'
 		         . '</div>'
 		         . '</form>'
@@ -380,20 +390,20 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 
 		// Begin the form (-> DO NOT CHANGE THIS ORDER -> this way the onsubmit attribute of the form can be changed by a field)
 		$return = '<div id="tl_buttons">'
-		        . '<a href="'.$this->getReferer(true).'" class="header_back" title="'.\StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['backBTTitle']).'" accesskey="b" onclick="Backend.getScrollOffset()">'.$GLOBALS['TL_LANG']['MSC']['backBT'].'</a>'
+		        . '<a href="'.$this->getReferer(true).'" class="header_back" title="'.StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['backBTTitle']).'" accesskey="b" onclick="Backend.getScrollOffset()">'.$GLOBALS['TL_LANG']['MSC']['backBT'].'</a>'
 		        . '</div>'
 		        . '<h2 class="sub_headline">'.sprintf($GLOBALS['TL_LANG']['MSC']['editRecord'], ($this->intId ? $this->intId : '')).'</h2>'
-		        . \Message::generate()
-		        . '<form action="'.ampersand(\Environment::get('request'), true).'" id="'.$this->strTable.'" class="tl_form" method="post" enctype="' . ($this->blnUploadable ? 'multipart/form-data' : 'application/x-www-form-urlencoded') . '"'.(!empty($this->onsubmit) ? ' onsubmit="'.implode(' ', $this->onsubmit).'"' : '').'>'
+		        . Message::generate()
+		        . '<form action="'.StringUtil::ampersand(Environment::get('request'), true).'" id="'.$this->strTable.'" class="tl_form" method="post" enctype="' . ($this->blnUploadable ? 'multipart/form-data' : 'application/x-www-form-urlencoded') . '"'.(!empty($this->onsubmit) ? ' onsubmit="'.implode(' ', $this->onsubmit).'"' : '').'>'
 		        . '<div class="tl_formbody_edit">'
-		        . '<input type="hidden" name="FORM_SUBMIT" value="'.\StringUtil::specialchars($this->strTable).'">'
-		        . '<input type="hidden" name="REQUEST_TOKEN" value="'.REQUEST_TOKEN.'">'
-		        . '<input type="hidden" name="FORM_FIELDS[]" value="'.\StringUtil::specialchars($this->strPalette).'">'
+		        . '<input type="hidden" name="FORM_SUBMIT" value="'.StringUtil::specialchars($this->strTable).'">'
+		        . '<input type="hidden" name="REQUEST_TOKEN" value="'.System::getContainer()->get('contao.csrf.token_manager')->getDefaultTokenValue().'">'
+		        . '<input type="hidden" name="FORM_FIELDS[]" value="'.StringUtil::specialchars($this->strPalette).'">'
 		        . ($this->noReload ? '<p class="tl_error">' . $GLOBALS['TL_LANG']['ERR']['general'] . '</p>' : '')
 		        . $return;
 
 		// Reload the page to prevent _POST variables from being sent twice
-		if (\Input::post('FORM_SUBMIT') == $this->strTable && !$this->noReload) {
+		if (Input::post('FORM_SUBMIT') == $this->strTable && !$this->noReload) {
 
 			// Trigger the onsubmit_callback
 			if (is_array($GLOBALS['TL_DCA'][$this->strTable]['config']['onsubmit_callback'] ?? null)) {
@@ -405,7 +415,7 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 
 			// Redirect
 			if (isset($_POST['saveNclose'])) {
-				\Message::reset();
+				Message::reset();
 				setcookie('BE_PAGE_OFFSET', 0, 0, '/');
 				$this->redirect($this->getReferer());
 			}
@@ -429,14 +439,12 @@ class ThemeAssistantDataContainer extends \DataContainer implements \listable, \
 	protected function isValid($strFile)
 	{
 		if (strpos($strFile, '../') !== false) {
-			$this->log('Invalid file name "' . $strFile . '" (hacking attempt)', 'DC_Folder isValid()', TL_ERROR);
-			$this->redirect('contao/main.php?act=error');
+			$this->redirect('contao?act=error');
 		}
 
 		// Check whether the file is within the files directory
-		if (!preg_match('/^('.preg_quote($GLOBALS['TL_CONFIG']['uploadPath'], '/').'|templates)/i', $strFile)) {
-			$this->log('File or folder "'.$strFile.'" is not within the files directory', 'DC_Folder isValid()', TL_ERROR);
-			$this->redirect('contao/main.php?act=error');
+		if (!preg_match('/^('.preg_quote(System::getContainer()->getParameter('contao.upload_path'), '/').'|templates)/i', $strFile)) {
+			$this->redirect('contao?act=error');
 		}
 
 		return true;

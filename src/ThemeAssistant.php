@@ -8,6 +8,18 @@
 
 namespace MadeYourDay\RockSolidThemeAssistant;
 
+use Contao\Backend;
+use Contao\CoreBundle\Monolog\ContaoContext;
+use Contao\DataContainer;
+use Contao\Dbafs;
+use Contao\File;
+use Contao\FilesModel;
+use Contao\Image;
+use Contao\Input;
+use Contao\StringUtil;
+use Contao\System;
+use Psr\Log\LogLevel;
+
 /**
  * RockSolid Theme Assistant DCA
  *
@@ -15,7 +27,7 @@ namespace MadeYourDay\RockSolidThemeAssistant;
  *
  * @author Martin Auswöger <martin@madeyourday.co>
  */
-class ThemeAssistant extends \Backend
+class ThemeAssistant extends Backend
 {
 	public function executePostActionsHook($action, $dc)
 	{
@@ -25,14 +37,14 @@ class ThemeAssistant extends \Backend
 
 		if ($action === 'loadFiletree') {
 
-			$strField = \Input::post('name');
+			$strField = Input::post('name');
 			$strClass = $GLOBALS['BE_FFL']['fileSelector'];
 			$objWidget = new $strClass($strClass::getAttributesFromDca($GLOBALS['TL_DCA'][$dc->table]['fields'][$strField], $strField, null, $strField, $dc->table, $dc));
 
 			// Load a particular node
-			if (\Input::post('folder', true) != '')
+			if (Input::post('folder', true) != '')
 			{
-				echo $objWidget->generateAjax(\Input::post('folder', true), \Input::post('field'), intval(\Input::post('level')));
+				echo $objWidget->generateAjax(Input::post('folder', true), Input::post('field'), intval(Input::post('level')));
 			}
 			else
 			{
@@ -44,11 +56,11 @@ class ThemeAssistant extends \Backend
 
 		if ($action === 'reloadPagetree' || $action === 'reloadFiletree') {
 
-			$intId = \Input::get('id');
-			$strField = $dc->field = \Input::post('name');
+			$intId = Input::get('id');
+			$strField = $dc->field = Input::post('name');
 
 			// Handle the keys in "edit multiple" mode
-			if (\Input::get('act') == 'editAll')
+			if (Input::get('act') == 'editAll')
 			{
 				$intId = preg_replace('/.*_([0-9a-zA-Z]+)$/', '$1', $strField);
 				$strField = preg_replace('/(.*)_[0-9a-zA-Z]+$/', '$1', $strField);
@@ -57,25 +69,24 @@ class ThemeAssistant extends \Backend
 			// The field does not exist
 			if (!isset($GLOBALS['TL_DCA'][$dc->table]['fields'][$strField]))
 			{
-				$this->log('Field "' . $strField . '" does not exist in DCA "' . $dc->table . '"', 'Ajax executePostActions()', TL_ERROR);
 				header('HTTP/1.1 400 Bad Request');
 				die('Bad Request');
 			}
 
-			$varValue = rawurldecode(\Input::post('value', true));
+			$varValue = rawurldecode(Input::post('value', true));
 			$strKey = ($action == 'reloadPagetree') ? 'pageTree' : 'fileTree';
 
 			// Convert the selected values
 			if ($varValue != '')
 			{
-				$varValue = \StringUtil::trimsplit("\t", $varValue);
+				$varValue = StringUtil::trimsplit("\t", $varValue);
 
 				// Automatically add resources to the DBAFS
 				if ($strKey == 'fileTree')
 				{
 					foreach ($varValue as $k=>$v)
 					{
-						$varValue[$k] = \Dbafs::addResource($v)->uuid;
+						$varValue[$k] = Dbafs::addResource($v)->uuid;
 					}
 				}
 
@@ -95,7 +106,7 @@ class ThemeAssistant extends \Backend
 		}
 	}
 
-	public function onloadCallback(\DataContainer $dc)
+	public function onloadCallback(DataContainer $dc)
 	{
 		if ($dc->id) {
 
@@ -106,7 +117,7 @@ class ThemeAssistant extends \Backend
 					$type = 'css';
 				}
 
-				list($data, $template) = static::parseBaseFile(file_get_contents(TL_ROOT . '/' . $dc->id), $type);
+				list($data, $template) = static::parseBaseFile(file_get_contents(System::getContainer()->getParameter('kernel.project_dir') . '/' . $dc->id), $type);
 
 				// Check if parsing the file was successful
 				if (empty($data) || empty($data['fileHash']) || empty($data['templateVars']) || !trim($template)) {
@@ -118,7 +129,7 @@ class ThemeAssistant extends \Backend
 					return;
 				}
 
-				if ($data['fileHash'] !== md5_file(TL_ROOT . '/' . substr($dc->id, 0, -5))) {
+				if ($data['fileHash'] !== md5_file(System::getContainer()->getParameter('kernel.project_dir') . '/' . substr($dc->id, 0, -5))) {
 					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields']['file_hash_warning'] = array(
 						'label' => array('', ''),
 						'input_field_callback' => array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'fieldFileHashCallback'),
@@ -126,7 +137,7 @@ class ThemeAssistant extends \Backend
 					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['palettes']['default'] .= 'file_hash_warning;';
 				}
 
-				if (!static::isWriteable(TL_ROOT . '/' . substr($dc->id, 0, -5)) || !static::isWriteable(TL_ROOT . '/' . $dc->id)) {
+				if (!static::isWriteable(System::getContainer()->getParameter('kernel.project_dir') . '/' . substr($dc->id, 0, -5)) || !static::isWriteable(System::getContainer()->getParameter('kernel.project_dir') . '/' . $dc->id)) {
 					$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields']['file_writable_warning'] = array(
 						'label' => array('', ''),
 						'input_field_callback' => array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'fieldFileWritableCallback'),
@@ -217,7 +228,7 @@ class ThemeAssistant extends \Backend
 						}
 					}
 					elseif ($var['type'] === 'image') {
-						$field['value'] = \FilesModel::findByPath($GLOBALS['TL_CONFIG']['uploadPath'] . '/' . $field['value']);
+						$field['value'] = FilesModel::findByPath(System::getContainer()->getParameter('contao.upload_path') . '/' . $field['value']);
 						if ($field['value']) {
 							$field['value'] = $field['value']->uuid;
 						}
@@ -233,7 +244,7 @@ class ThemeAssistant extends \Backend
 					}
 					elseif ($var['type'] === 'background-image') {
 						if (substr($field['value'], 0, 5) === 'url("' && substr($field['value'], -2) === '")') {
-							$field['value'] = \FilesModel::findByPath(static::resolveRelativePath(dirname($dc->id) . '/' . substr($field['value'], 5, -2)));
+							$field['value'] = FilesModel::findByPath(static::resolveRelativePath(dirname($dc->id) . '/' . substr($field['value'], 5, -2)));
 							if ($field['value']) {
 								$field['value'] = $field['value']->uuid;
 							}
@@ -358,13 +369,13 @@ class ThemeAssistant extends \Backend
 
 			}
 			else {
-				$this->redirect('contao/main.php?act=error');
+				$this->redirect('contao?act=error');
 			}
 
 		}
-		elseif (substr(\Input::get('target'), 0, 26) === 'rocksolid_theme_assistant.') {
+		elseif (substr(Input::get('target'), 0, 26) === 'rocksolid_theme_assistant.') {
 			$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields'][
-				explode('.', \Input::get('target'), 3)[1]
+				explode('.', Input::get('target'), 3)[1]
 			] = [
 				'inputType' => 'fileTree',
 				'eval' => [
@@ -390,9 +401,9 @@ class ThemeAssistant extends \Backend
 			return;
 		}
 
-		if (substr(\Input::get('target'), 0, 26) === 'rocksolid_theme_assistant.') {
+		if (substr(Input::get('target'), 0, 26) === 'rocksolid_theme_assistant.') {
 			$GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields'][
-				explode('.', \Input::get('target'), 3)[1]
+				explode('.', Input::get('target'), 3)[1]
 			] = [
 				'inputType' => 'fileTree',
 				'eval' => [
@@ -404,16 +415,16 @@ class ThemeAssistant extends \Backend
 		}
 	}
 
-	public function fieldLoadCallback($value, \DataContainer $dc)
+	public function fieldLoadCallback($value, DataContainer $dc)
 	{
-		$route = \System::getContainer()->get('request_stack')->getCurrentRequest()->get('_route');
+		$route = System::getContainer()->get('request_stack')->getCurrentRequest()->get('_route');
 
 		if (
 			(
 				$route === 'contao_backend_file'
 				|| $route === 'contao_backend_page'
 			)
-			&& \Input::get('field') === $dc->field
+			&& Input::get('field') === $dc->field
 		) {
 			return $value;
 		}
@@ -421,28 +432,28 @@ class ThemeAssistant extends \Backend
 		return $GLOBALS['TL_DCA']['rocksolid_theme_assistant']['fields'][$dc->field]['value'];
 	}
 
-	public function fieldFileInvalidCallback(\DataContainer $dc)
+	public function fieldFileInvalidCallback(DataContainer $dc)
 	{
 		return '<p class="tl_gerror"><strong>'
 		     . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['invalid_error'][0] . ':</strong> '
 		     . sprintf($GLOBALS['TL_LANG']['rocksolid_theme_assistant']['invalid_error'][1], $dc->id) . '</p>';
 	}
 
-	public function fieldFileHashCallback(\DataContainer $dc)
+	public function fieldFileHashCallback(DataContainer $dc)
 	{
 		return '<p class="tl_gerror"><strong>'
 		     . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['hash_warning'][0] . ':</strong> '
 		     . sprintf($GLOBALS['TL_LANG']['rocksolid_theme_assistant']['hash_warning'][1], substr($dc->id, 0, -5)) . '</p>';
 	}
 
-	public function fieldFileWritableCallback(\DataContainer $dc)
+	public function fieldFileWritableCallback(DataContainer $dc)
 	{
 		return '<p class="tl_gerror"><strong>'
 		     . $GLOBALS['TL_LANG']['rocksolid_theme_assistant']['writable_warning'][0] . ':</strong> '
 		     . sprintf($GLOBALS['TL_LANG']['rocksolid_theme_assistant']['writable_warning'][1], substr($dc->id, 0, -5), $dc->id) . '</p>';
 	}
 
-	public function fieldVariationsWizard(\DataContainer $dc)
+	public function fieldVariationsWizard(DataContainer $dc)
 	{
 		return '<script>'
 		     . '	$("ctrl_' . $dc->field . '").addEvent("change", function(){'
@@ -456,11 +467,11 @@ class ThemeAssistant extends \Backend
 		     . '</script>';
 	}
 
-	public function colorWizardCallback(\DataContainer $dc)
+	public function colorWizardCallback(DataContainer $dc)
 	{
 		$assetsDir = 'assets/colorpicker';
 
-		return ' '.\Image::getHtml('pickcolor.gif', $GLOBALS['TL_LANG']['MSC']['colorpicker'], 'style="vertical-align:top;cursor:pointer" title="' . \StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['colorpicker']) . '" id="moo_' . $dc->field . '"') . '
+		return ' '.Image::getHtml('pickcolor.gif', $GLOBALS['TL_LANG']['MSC']['colorpicker'], 'style="vertical-align:top;cursor:pointer" title="' . StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['colorpicker']) . '" id="moo_' . $dc->field . '"') . '
 			<script>
 				window.addEvent("domready", function() {
 					new MooRainbow("moo_' . $dc->field . '", {
@@ -482,7 +493,7 @@ class ThemeAssistant extends \Backend
 			</script>';
 	}
 
-	public function onsubmitCallback(\DataContainer $dc)
+	public function onsubmitCallback(DataContainer $dc)
 	{
 
 		if ($dc->id && substr($dc->id, -5) === '.base') {
@@ -492,17 +503,17 @@ class ThemeAssistant extends \Backend
 				$type = 'css';
 			}
 
-			list($data, $template) = static::parseBaseFile(file_get_contents(TL_ROOT . '/' . $dc->id), $type);
+			list($data, $template) = static::parseBaseFile(file_get_contents(System::getContainer()->getParameter('kernel.project_dir') . '/' . $dc->id), $type);
 
 			// Check if parsing the file was successful
 			if (empty($data) || empty($data['fileHash']) || empty($data['templateVars']) || !trim($template)) {
-				$this->redirect('contao/main.php?act=error');
+				$this->redirect('contao?act=error');
 				return;
 			}
 
-			if (\Input::post('variations') && substr(\Input::post('variations'), 0, 9) === 'variation') {
+			if (Input::post('variations') && substr(Input::post('variations'), 0, 9) === 'variation') {
 
-				$variation = (int) substr(\Input::post('variations'), 9);
+				$variation = (int) substr(Input::post('variations'), 9);
 				foreach ($data['templateVars'] as $key => $var) {
 					if (isset($data['templateVars'][$key]['defaultValues'][$variation])) {
 						$data['templateVars'][$key]['value'] = $data['templateVars'][$key]['defaultValues'][$variation];
@@ -517,11 +528,11 @@ class ThemeAssistant extends \Backend
 
 				foreach ($data['templateVars'] as $key => $var) {
 
-					if(\Input::post($key) === null){
+					if(Input::post($key) === null){
 						continue;
 					}
 
-					$value = \Input::post($key, true);
+					$value = Input::post($key, true);
 
 					if ($data['templateVars'][$key]['type'] === 'color') {
 						if (strlen($value) === 6) {
@@ -537,10 +548,10 @@ class ThemeAssistant extends \Backend
 					elseif ($data['templateVars'][$key]['type'] === 'image') {
 						$file = null;
 						if (trim($value)) {
-							$file = \FilesModel::findByUuid(\StringUtil::uuidToBin($value));
+							$file = FilesModel::findByUuid(StringUtil::uuidToBin($value));
 						}
 						if ($file) {
-							$value = substr($file->path, strlen($GLOBALS['TL_CONFIG']['uploadPath'])+1);
+							$value = substr($file->path, strlen(System::getContainer()->getParameter('contao.upload_path'))+1);
 						}
 						else {
 							$value = '';
@@ -549,7 +560,7 @@ class ThemeAssistant extends \Backend
 					elseif ($data['templateVars'][$key]['type'] === 'background-image') {
 						$file = null;
 						if (trim($value)) {
-							$file = \FilesModel::findByUuid(\StringUtil::uuidToBin($value));
+							$file = FilesModel::findByUuid(StringUtil::uuidToBin($value));
 						}
 						if ($file) {
 							$value = 'url("' . static::getRelativePath(dirname($dc->id), $file->path) . '")';
@@ -594,29 +605,28 @@ class ThemeAssistant extends \Backend
 
 			$rendered = $this->renderTemplate($template, $data, $type);
 			if (!$rendered) {
-				$this->log('Parse error in Theme Assistant template "' . $dc->id . '"', 'MadeYourDay\RockSolidThemeAssistant\ThemeAssistant::onsubmitCallback', TL_ERROR);
-				return $this->redirect('contao/main.php?act=error');
+				return $this->redirect('contao?act=error');
 			}
-			file_put_contents(TL_ROOT . '/' . substr($dc->id, 0, -5), $rendered);
-			$data['fileHash'] = md5_file(TL_ROOT . '/' . substr($dc->id, 0, -5));
+			file_put_contents(System::getContainer()->getParameter('kernel.project_dir') . '/' . substr($dc->id, 0, -5), $rendered);
+			$data['fileHash'] = md5_file(System::getContainer()->getParameter('kernel.project_dir') . '/' . substr($dc->id, 0, -5));
 			if($type === 'css'){
 				$template = "/*".json_encode($data) . "*/\n" . $template;
 			}
 			else{
 				$template = "<!--".json_encode($data) . "-->\n" . $template;
 			}
-			file_put_contents(TL_ROOT . '/' . $dc->id, $template);
+			file_put_contents(System::getContainer()->getParameter('kernel.project_dir') . '/' . $dc->id, $template);
 
-			if(substr($dc->id, 0, strlen($GLOBALS['TL_CONFIG']['uploadPath'])) === $GLOBALS['TL_CONFIG']['uploadPath']){
-				$file = new \File($dc->id);
-				$fileRecord = \FilesModel::findByPath($dc->id);
+			if(substr($dc->id, 0, strlen(System::getContainer()->getParameter('contao.upload_path'))) === System::getContainer()->getParameter('contao.upload_path')){
+				$file = new File($dc->id);
+				$fileRecord = FilesModel::findByPath($dc->id);
 				$fileRecord->hash = $file->hash;
 				$fileRecord->save();
 			}
 
 		}
 		else {
-			$this->redirect('contao/main.php?act=error');
+			$this->redirect('contao?act=error');
 		}
 
 	}
@@ -624,8 +634,8 @@ class ThemeAssistant extends \Backend
 	public function editButtonCallback($arrRow, $href, $label, $title, $icon, $attributes, $strTable, $arrRootIds, $arrChildRecordIds, $blnCircularReference, $strPrevious, $strNext)
 	{
 		if(substr($arrRow['id'], -5) === '.base'){
-			return '<a href="' . $this->addToUrl($href . '&amp;id=' . $arrRow['id']) . '" title="' . \StringUtil::specialchars($title) . '"' . $attributes . '>'
-			     . \Image::getHtml($icon, $label)
+			return '<a href="' . $this->addToUrl($href . '&amp;id=' . $arrRow['id']) . '" title="' . StringUtil::specialchars($title) . '"' . $attributes . '>'
+			     . Image::getHtml($icon, $label)
 			     . '</a> ';
 		}
 
@@ -679,7 +689,7 @@ class ThemeAssistant extends \Backend
 		ob_start();
 
 		try {
-			eval('?>' . $_phpCode . '<?php ');
+			@eval('?>' . $_phpCode . '<?php ');
 			return ob_get_contents() ?: '';
 		}
 		finally {
@@ -871,7 +881,12 @@ class ThemeAssistant extends \Backend
 
 		}
 
-		$this->log('Unknow CSS function "' . $function . '(' . implode(', ', $params) . ')" in Theme Assistant template', 'MadeYourDay\RockSolidThemeAssistant\ThemeAssistant::executeCssFunction', TL_ERROR);
+		System::getContainer()->get('monolog.logger.contao')->log(
+			LogLevel::ERROR,
+			'Unknow CSS function "' . $function . '(' . implode(', ', $params) . ')" in Theme Assistant template',
+			array('contao' => new ContaoContext('MadeYourDay\RockSolidThemeAssistant\ThemeAssistant::executeCssFunction', 'ERROR')),
+		);
+
 		return '';
 	}
 

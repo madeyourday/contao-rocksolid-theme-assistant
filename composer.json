@@ -18,8 +18,8 @@
 		"source":"https://github.com/madeyourday/contao-rocksolid-theme-assistant"
 	},
 	"require":{
-		"php":">=7.2",
-		"contao/core-bundle":"^4.9"
+		"php":">=7.4",
+		"contao/core-bundle":"^4.13 || ^5.0"
 	},
 	"require-dev": {
 		"contao/manager-plugin": "^2.0"
@@ -31,8 +31,7 @@
 	"autoload":{
 		"psr-4": {
 			"MadeYourDay\\RockSolidThemeAssistant\\": "src/"
-		},
-		"classmap": ["DC_RockSolidThemeAssistant.php"]
+		}
 	},
 	"replace":{
 		"contao-legacy/rocksolid-theme-assistant":"self.version"
