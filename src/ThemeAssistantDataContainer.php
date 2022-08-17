@@ -39,7 +39,7 @@ class ThemeAssistantDataContainer extends DataContainer implements ListableDataC
 		// Check the request token (see #4007)
 		if (isset($_GET['act'])) {
 			if (Input::get('rt') === null || !System::getContainer()->get('contao.csrf.token_manager')->isTokenValid(new CsrfToken(System::getContainer()->getParameter('contao.csrf_token_name'), Input::get('rt')))) {
-				System::getContainer()->get('session')->getBag('contao_backend')->set('INVALID_TOKEN_URL', Environment::get('request'));
+				System::getContainer()->get('request_stack')->getSession()->getBag('contao_backend')->set('INVALID_TOKEN_URL', Environment::get('request'));
 				$this->redirect('contao/confirm');
 			}
 		}
@@ -288,7 +288,7 @@ class ThemeAssistantDataContainer extends DataContainer implements ListableDataC
 			}
 
 			$class = 'tl_tbox';
-			$fs = System::getContainer()->get('session')->getBag('contao_backend')->get('fieldset_states');
+			$fs = System::getContainer()->get('request_stack')->getSession()->getBag('contao_backend')->get('fieldset_states');
 			$blnIsFirst = true;
 
 			// Render boxes
