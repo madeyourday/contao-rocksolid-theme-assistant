@@ -126,7 +126,7 @@ class ThemeAssistantDataContainer extends DataContainer implements ListableDataC
 
 			if ($screenshot) {
 				$projectDir = System::getContainer()->getParameter('kernel.project_dir');
-				$screenshot = TL_FILES_URL . System::getContainer()->get('contao.image.factory')->create($projectDir . '/' . $screenshot->path, array(80, 60, 'center_top'))->getUrl($projectDir);
+				$screenshot = System::getContainer()->get('contao.assets.files_context')->getStaticUrl() . System::getContainer()->get('contao.image.factory')->create($projectDir . '/' . $screenshot->path, array(80, 60, 'center_top'))->getUrl($projectDir);
 			}
 
 			if (count($files)) {
