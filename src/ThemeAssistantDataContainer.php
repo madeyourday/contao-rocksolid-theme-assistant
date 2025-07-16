@@ -321,15 +321,15 @@ class ThemeAssistantDataContainer extends DataContainer implements ListableDataC
 				}
 
 				$return .= "\n\n" . '<fieldset' . ($key ? ' id="pal_'.$key.'"' : '') . ' class="' . $class . ($legend ? '' : ' nolegend'). '"'
-						.' data-controller="contao--toggle-fieldset"'
-						.' data-contao--toggle-fieldset-id-value="' . $key . '"'
-						.' data-contao--toggle-fieldset-table-value="' . $this->strTable . '"'
-						.' data-contao--toggle-fieldset-collapsed-class="collapsed"'.
-						' data-contao--jump-targets-target="section"'.
-						' data-contao--jump-targets-label-value="'
-						. ($GLOBALS['TL_LANG'][$this->strTable][$key] ?? $key)
-						. '" data-action="contao--jump-targets:scrollto->contao--toggle-fieldset#open">'
-						. $legend;
+					.' data-controller="contao--toggle-fieldset"'
+					.' data-contao--toggle-fieldset-id-value="' . $key . '"'
+					.' data-contao--toggle-fieldset-table-value="' . $this->strTable . '"'
+					.' data-contao--toggle-fieldset-collapsed-class="collapsed"'.
+					' data-contao--jump-targets-target="section"'.
+					' data-contao--jump-targets-label-value="'
+					. ($GLOBALS['TL_LANG'][$this->strTable][$key] ?? $key)
+					. '" data-action="contao--jump-targets:scrollto->contao--toggle-fieldset#open">'
+					. $legend;
 
 				// Build rows of the current box
 				foreach ($v as $vv) {
@@ -450,7 +450,7 @@ class ThemeAssistantDataContainer extends DataContainer implements ListableDataC
 			         . '</script>';
 		}
 
-        if ($this->hasStimulusControllers) {
+		if ($this->hasStimulusControllers) {
 			$return = '<div data-controller="contao--jump-targets">'
 					. '<div class="jump-targets">'
 					. '<div class="inner" data-contao--jump-targets-target="navigation">'
