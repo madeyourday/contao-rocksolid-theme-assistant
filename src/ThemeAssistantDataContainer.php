@@ -200,7 +200,7 @@ class ThemeAssistantDataContainer extends DataContainer implements ListableDataC
 			$eoCount = -1;
 
 			foreach ($theme['files'] as $file) {
-				$return .= '<tr class="'.((++$eoCount % 2 == 0) ? 'even' : 'odd').'" onmouseover="Theme.hoverRow(this,1)" onmouseout="Theme.hoverRow(this,0)">';
+                $return .= '<tr class="hover-row'.((++$eoCount % 2 == 0) ? ' even' : ' odd').'">';
 				$return .= '<td class="tl_file_list">'.$GLOBALS['TL_LANG']['rocksolid_theme_assistant']['file_types'][$file['type']].' ('.$file['name'].')</td>';
 				$return .= '<td class="tl_file_list tl_right_nowrap">'.$this->generateButtons($file, $this->strTable).'</td>';
 				$return .= '</tr>';
