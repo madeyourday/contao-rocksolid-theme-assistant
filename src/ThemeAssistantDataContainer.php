@@ -307,7 +307,7 @@ class ThemeAssistantDataContainer extends DataContainer implements ListableDataC
 
 					if ($this->hasStimulusControllers) {
 						$legend = "\n" . '<legend><button type="button" data-action="click->contao--toggle-fieldset#toggle">' . (isset($GLOBALS['TL_LANG'][$this->strTable][$key]) ? $GLOBALS['TL_LANG'][$this->strTable][$key] : $key) . '</button></legend>';
-                    }
+					}
 					else {
 						$legend = "\n" . '<legend onclick="AjaxRequest.toggleFieldset(this,\'' . $key . '\',\'' . $this->strTable . '\')">' . (isset($GLOBALS['TL_LANG'][$this->strTable][$key]) ? $GLOBALS['TL_LANG'][$this->strTable][$key] : $key) . '</legend>';
 					}
