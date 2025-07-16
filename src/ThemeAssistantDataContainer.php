@@ -452,12 +452,12 @@ class ThemeAssistantDataContainer extends DataContainer implements ListableDataC
 
 		if ($this->hasStimulusControllers) {
 			$return = '<div data-controller="contao--jump-targets">'
-					. '<div class="jump-targets">'
-					. '<div class="inner" data-contao--jump-targets-target="navigation">'
-					. '</div>'
-					. '</div>'
-					. $return
-					. '</div>';
+				. '<div class="jump-targets">'
+				. '<div class="inner" data-contao--jump-targets-target="navigation">'
+				. '</div>'
+				. '</div>'
+				. $return
+				. '</div>';
 		}
 
 		return $return;
