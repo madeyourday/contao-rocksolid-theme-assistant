@@ -54,7 +54,7 @@ class ThemeAssistantDataContainer extends DataContainer implements ListableDataC
 
 		$this->strTable = $strTable;
 		$this->arrModule = $arrModule;
-		$this->hasStimulusControllers = !version_compare(ContaoCoreBundle::getVersion(), '5.2.99', '<');
+		$this->hasStimulusControllers = version_compare(ContaoCoreBundle::getVersion(), '5.3', '>=');
 
 		// Call onload_callback (e.g. to check permissions)
 		if (is_array($GLOBALS['TL_DCA'][$this->strTable]['config']['onload_callback'] ?? null)) {
