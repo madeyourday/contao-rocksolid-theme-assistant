@@ -9,6 +9,7 @@
 namespace MadeYourDay\RockSolidThemeAssistant;
 
 use Contao\Backend;
+use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\CoreBundle\Monolog\ContaoContext;
 use Contao\DataContainer;
 use Contao\Dbafs;
@@ -214,8 +215,11 @@ class ThemeAssistant extends Backend
 							'isHexColor'     => true,
 							'decodeEntities' => true,
 							'tl_class'       => 'wizard',
+							'colorpicker'    => version_compare(ContaoCoreBundle::getVersion(), '5.7', '>='),
 						);
-						$field['wizard'] = array(array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'colorWizardCallback'));
+						if (!version_compare(ContaoCoreBundle::getVersion(), '5.7', '>=')) {
+							$field['wizard'] = array(array('MadeYourDay\\RockSolidThemeAssistant\\ThemeAssistant', 'colorWizardCallback'));
+						}
 					}
 					elseif ($var['type'] === 'boolean') {
 						$field['inputType'] = 'checkbox';
