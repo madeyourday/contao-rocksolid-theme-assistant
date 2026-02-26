@@ -12,6 +12,7 @@
 namespace MadeYourDay\RockSolidThemeAssistant;
 
 use Contao\BackendUser;
+use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\DataContainer;
 use Contao\EditableDataContainerInterface;
 use Contao\Environment;
@@ -200,7 +201,7 @@ class ThemeAssistantDataContainer extends DataContainer implements ListableDataC
 			$eoCount = -1;
 
 			foreach ($theme['files'] as $file) {
-				$return .= '<tr class="'.((++$eoCount % 2 == 0) ? 'even' : 'odd').'" onmouseover="Theme.hoverRow(this,1)" onmouseout="Theme.hoverRow(this,0)">';
+				$return .= '<tr class="hover-row'.((++$eoCount % 2 == 0) ? ' even' : ' odd').'">';
 				$return .= '<td class="tl_file_list">'.$GLOBALS['TL_LANG']['rocksolid_theme_assistant']['file_types'][$file['type']].' ('.$file['name'].')</td>';
 				$return .= '<td class="tl_file_list tl_right_nowrap">'.$this->generateButtons($file, $this->strTable).'</td>';
 				$return .= '</tr>';
@@ -302,7 +303,13 @@ class ThemeAssistantDataContainer extends DataContainer implements ListableDataC
 
 				if (isset($legends[$k])) {
 					list($key, $cls) = explode(':', $legends[$k]);
-					$legend = "\n" . '<legend onclick="AjaxRequest.toggleFieldset(this,\'' . $key . '\',\'' . $this->strTable . '\')">' . (isset($GLOBALS['TL_LANG'][$this->strTable][$key]) ? $GLOBALS['TL_LANG'][$this->strTable][$key] : $key) . '</legend>';
+
+					if (version_compare(ContaoCoreBundle::getVersion(), '5.3', '>=')) {
+						$legend = "\n" . '<legend><button type="button" data-action="click->contao--toggle-fieldset#toggle">' . (isset($GLOBALS['TL_LANG'][$this->strTable][$key]) ? $GLOBALS['TL_LANG'][$this->strTable][$key] : $key) . '</button></legend>';
+					}
+					else {
+						$legend = "\n" . '<legend onclick="AjaxRequest.toggleFieldset(this,\'' . $key . '\',\'' . $this->strTable . '\')">' . (isset($GLOBALS['TL_LANG'][$this->strTable][$key]) ? $GLOBALS['TL_LANG'][$this->strTable][$key] : $key) . '</legend>';
+					}
 				}
 
 				if (isset($fs[$this->strTable][$key])) {
@@ -312,7 +319,16 @@ class ThemeAssistantDataContainer extends DataContainer implements ListableDataC
 					$class .= (($cls && $legend) ? ' ' . $cls : '');
 				}
 
-				$return .= "\n\n" . '<fieldset' . ($key ? ' id="pal_'.$key.'"' : '') . ' class="' . $class . ($legend ? '' : ' nolegend') . '">' . $legend;
+				$return .= "\n\n" . '<fieldset' . ($key ? ' id="pal_'.$key.'"' : '') . ' class="' . $class . ($legend ? '' : ' nolegend'). '"'
+					.' data-controller="contao--toggle-fieldset"'
+					.' data-contao--toggle-fieldset-id-value="' . $key . '"'
+					.' data-contao--toggle-fieldset-table-value="' . $this->strTable . '"'
+					.' data-contao--toggle-fieldset-collapsed-class="collapsed"'.
+					' data-contao--jump-targets-target="section"'.
+					' data-contao--jump-targets-label-value="'
+					. ($GLOBALS['TL_LANG'][$this->strTable][$key] ?? $key)
+					. '" data-action="contao--jump-targets:scrollto->contao--toggle-fieldset#open">'
+					. $legend;
 
 				// Build rows of the current box
 				foreach ($v as $vv) {
@@ -431,6 +447,16 @@ class ThemeAssistantDataContainer extends DataContainer implements ListableDataC
 			         . '	Backend.vScrollTo(($(\'' . $this->strTable . '\').getElement(\'label.error\').getPosition().y - 20));'
 			         . '});'
 			         . '</script>';
+		}
+
+		if (version_compare(ContaoCoreBundle::getVersion(), '5.3', '>=')) {
+			$return = '<div data-controller="contao--jump-targets">'
+				. '<div class="jump-targets">'
+				. '<div class="inner" data-contao--jump-targets-target="navigation">'
+				. '</div>'
+				. '</div>'
+				. $return
+				. '</div>';
 		}
 
 		return $return;
