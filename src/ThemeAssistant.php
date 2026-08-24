@@ -421,7 +421,7 @@ class ThemeAssistant extends Backend
 
 	public function fieldLoadCallback($value, DataContainer $dc)
 	{
-		$route = System::getContainer()->get('request_stack')->getCurrentRequest()->get('_route');
+		$route = System::getContainer()->get('request_stack')->getCurrentRequest()->attributes->get('_route');
 
 		if (
 			(
